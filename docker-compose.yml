@@ -1,0 +1,34 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: iot_server
+      POSTGRES_USER: iot
+      POSTGRES_PASSWORD: iot_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  mqtt:
+    image: emqx/emqx:5
+    ports:
+      - "1883:1883"
+      - "8883:8883"
+      - "18083:18083"
+    volumes:
+      - ./mqtt-server/emqx.conf:/opt/emqx/etc/emqx.conf:ro
+      - ./certs:/opt/emqx/etc/certs:ro
+    depends_on:
+      - postgres
+
+  streaming:
+    image: alfg/nginx-rtmp
+    ports:
+      - "1935:1935"
+      - "8080:8080"
+    volumes:
+      - ./streaming-server/nginx.conf:/etc/nginx/nginx.conf:ro
+
+volumes:
+  postgres_data:

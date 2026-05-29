@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>IoT Server 搭建手册</title>
+	<style>
+		body {
+			margin: 0;
+			font-family: Arial, "Microsoft YaHei", sans-serif;
+			line-height: 1.65;
+			color: #1f2937;
+			background: #f5f7fb;
+		}
+		.layout {
+			display: grid;
+			grid-template-columns: 260px minmax(0, 1fr);
+			min-height: 100vh;
+		}
+		.menu {
+			position: sticky;
+			top: 0;
+			box-sizing: border-box;
+			height: 100vh;
+			padding: 24px 18px;
+			overflow-y: auto;
+			background: #152033;
+			color: #ffffff;
+		}
+		.menu h1 {
+			margin: 0 0 18px;
+			font-size: 20px;
+			line-height: 1.3;
+		}
+		.menu nav {
+			display: grid;
+			gap: 7px;
+		}
+		.menu a {
+			padding: 9px 10px;
+			border-radius: 6px;
+			color: #dbe6f3;
+			text-decoration: none;
+		}
+		.menu a:hover,
+		.menu a:focus {
+			background: #253954;
+			color: #ffffff;
+			outline: none;
+		}
+		main {
+			box-sizing: border-box;
+			width: 100%;
+			max-width: 1040px;
+			padding: 34px 28px 56px;
+		}
+		header {
+			margin-bottom: 24px;
+		}
+		header h2 {
+			margin: 0 0 8px;
+			font-size: 30px;
+			line-height: 1.25;
+		}
+		section {
+			margin: 18px 0;
+			padding: 20px;
+			border: 1px solid #d9e1ec;
+			border-radius: 8px;
+			background: #ffffff;
+		}
+		h3 {
+			margin: 0 0 10px;
+			font-size: 22px;
+		}
+		h4 {
+			margin: 18px 0 8px;
+			font-size: 17px;
+		}
+		code,
+		pre {
+			font-family: Consolas, "Courier New", monospace;
+		}
+		code {
+			color: #24466f;
+		}
+		pre {
+			margin: 10px 0;
+			padding: 14px;
+			overflow-x: auto;
+			border-radius: 6px;
+			background: #101828;
+			color: #f2f4f7;
+		}
+		table {
+			width: 100%;
+			border-collapse: collapse;
+			margin: 12px 0;
+			font-size: 14px;
+		}
+		th,
+		td {
+			border: 1px solid #d9e1ec;
+			padding: 10px;
+			text-align: left;
+			vertical-align: top;
+		}
+		th {
+			background: #eef3f8;
+		}
+		.note {
+			padding: 10px 12px;
+			border-left: 4px solid #2f6fed;
+			background: #eef4ff;
+		}
+		@media (max-width: 820px) {
+			.layout {
+				display: block;
+			}
+			.menu {
+				position: static;
+				height: auto;
+			}
+			.menu nav {
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+			}
+			main {
+				padding: 24px 16px 40px;
+			}
+			header h2 {
+				font-size: 25px;
+			}
+		}
+	</style>
+</head>
+<body>
+	<div class="layout">
+		<aside class="menu">
+			<h1>IoT Server 搭建手册</h1>
+			<nav aria-label="章节菜单">
+				<a href="#goal">学习目标</a>
+				<a href="#layout">工程目录</a>
+				<a href="#architecture">整体架构</a>
+				<a href="#components">核心组件</a>
+				<a href="#web-backend">Web 后台</a>
+				<a href="#mqtt">MQTT 服务</a>
+				<a href="#streaming">流媒体服务</a>
+				<a href="#certs">CA 与证书</a>
+				<a href="#surge">洪峰处理</a>
+			</nav>
+		</aside>
+
+		<main>
+			<header id="goal">
+				<h2>从零搭建 IoT 服务器和云服务</h2>
+				<p>本手册把工程目录编排、业务服务边界、双向认证、MQTT、流媒体、数据库和洪峰处理放在一个 HTML 中分章节说明。</p>
+			</header>
+
+			<section>
+				<h3>学习目标</h3>
+				<ul>
+					<li>理解 IoT 云服务工程的基本目录组织。</li>
+					<li>理解 Web 后台、MQTT、流媒体、CA 证书系统各自负责什么。</li>
+					<li>能够为 ESP32 设备建立基于证书的双向认证链路。</li>
+					<li>能够为设备洪峰接入预留限流、缓存、队列和异步处理能力。</li>
+				</ul>
+			</section>
+
+			<section id="layout">
+				<h3>工程目录编排</h3>
+				<p>本工程按业务服务拆分目录，每个目录可以独立开发、独立配置、独立容器化。</p>
+				<ul>
+					<li><code>web-backend/</code>: Web 后台、数据库访问、设备管理、证书元数据、审计日志。</li>
+					<li><code>mqtt-server/</code>: MQTT Broker 配置、设备连接认证、Topic 权限、消息限流。</li>
+					<li><code>streaming-server/</code>: Nginx 流媒体服务、拉流入口、流媒体限流和 mTLS 示例。</li>
+					<li><code>certs/</code>: 本地开发证书说明和 CA 工具。</li>
+					<li><code>docs/</code>: 单页学习手册。</li>
+					<li><code>docker-compose.yml</code>: 本地联调编排文件。</li>
+				</ul>
+				<p class="note">管理流量、设备消息流量、媒体流量的性能模型和安全边界不同，所以目录和服务都需要拆开。</p>
+			</section>
+
+			<section id="architecture">
+				<h3>整体架构</h3>
+				<p>平台目标是提供 IoT 设备后台服务，包括 Web 管理、数据库持久化、MQTT 消息、Nginx 流媒体拉流和证书认证。</p>
+				<h4>服务边界</h4>
+				<ul>
+					<li><code>web-backend</code> 管理设备、用户、证书、流地址、审计日志和数据库访问。</li>
+					<li><code>mqtt-server</code> 管理设备长连接、Topic ACL、限流和遥测转发。</li>
+					<li><code>streaming-server</code> 管理 Nginx 流媒体配置、拉流入口和流媒体限流。</li>
+				</ul>
+				<h4>推荐开源栈</h4>
+				<ul>
+					<li>PostgreSQL: 关系型元数据。</li>
+					<li>EMQX: MQTT Broker。</li>
+					<li>Nginx RTMP: 流媒体入门服务。</li>
+					<li>Redis: 热数据缓存和轻量限流状态。</li>
+					<li>Kafka 或 RabbitMQ: 遥测消息削峰缓冲。</li>
+				</ul>
+			</section>
+
+			<section id="components">
+				<h3>核心组件是什么</h3>
+				<p>这一节先解释工程中出现的组件各自是什么、解决什么问题，以及为什么放在 IoT 服务器里。</p>
+				<h4>Docker Compose</h4>
+				<p><code>docker-compose.yml</code> 是本地联调编排文件。它不是把所有服务塞进一个容器，而是用一个文件同时管理多个独立容器，例如数据库、MQTT Broker 和流媒体服务器。</p>
+				<h4>PostgreSQL</h4>
+				<p>PostgreSQL 是关系型数据库，用来保存设备、用户、证书、流地址、审计日志等结构化数据。它适合作为后台管理系统的核心数据存储。</p>
+				<h4>Web Backend</h4>
+				<p>Web 后台是你自己开发的业务服务。它负责提供管理 API、读写 PostgreSQL、维护设备状态、管理证书状态，并把设备数据变成后台可以查询和操作的业务数据。</p>
+				<h4>EMQX</h4>
+				<p>EMQX 是 MQTT Broker。ESP32 这类设备通常不适合频繁发 HTTP 请求，MQTT 更适合长连接、低带宽、弱网络环境。EMQX 负责接收设备连接、校验证书、管理 Topic、转发消息和限制异常流量。</p>
+				<h4>MQTT</h4>
+				<p>MQTT 是一种发布/订阅消息协议。设备把遥测数据发布到 Topic，云端服务订阅这些 Topic；云端也可以向设备命令 Topic 发布控制消息。</p>
+				<h4>Nginx RTMP</h4>
+				<p>Nginx RTMP 是基于 Nginx 的流媒体模块，用来学习和搭建推流、拉流能力。设备或边缘网关可以推流到 RTMP 服务，用户或后台服务再从服务器拉流。</p>
+				<h4>CA</h4>
+				<p>CA 是证书签发机构。你自己生成一个本地 CA 后，可以用它签发服务器证书和每台 ESP32 的设备证书。服务器和设备都信任同一个 CA，才能建立双向认证。</p>
+				<h4>mTLS</h4>
+				<p>mTLS 是双向 TLS。普通 TLS 只要求设备验证服务器身份；mTLS 还要求服务器验证设备身份。这样 ESP32 访问 MQTT 或其他设备入口时，必须携带自己的客户端证书。</p>
+				<h4>Redis</h4>
+				<p>Redis 是内存型缓存。它适合保存热点设备状态、短期限流计数、幂等键和临时会话信息，能减少数据库压力。</p>
+				<h4>Kafka 或 RabbitMQ</h4>
+				<p>Kafka 和 RabbitMQ 都是消息队列。设备洪峰上报时，队列可以先接住大量消息，再让后台消费者按数据库能承受的速度慢慢处理。</p>
+			</section>
+
+			<section id="web-backend">
+				<h3>Web 后台如何搭建</h3>
+				<p>Web 后台是 IoT 云服务的大脑，负责管理平台数据和提供管理接口。</p>
+				<h4>核心职责</h4>
+				<ul>
+					<li>管理设备档案、设备证书和证书状态。</li>
+					<li>管理用户、角色和后台权限。</li>
+					<li>记录设备事件和审计日志。</li>
+					<li>管理流媒体地址和设备配置。</li>
+				</ul>
+				<h4>数据库起步表</h4>
+				<ul>
+					<li><code>devices</code>: 设备 ID、名称、状态、证书指纹、创建时间。</li>
+					<li><code>device_certificates</code>: 证书序列号、设备 ID、有效期、吊销状态。</li>
+					<li><code>device_events</code>: 设备事件、上报时间、处理状态。</li>
+					<li><code>streams</code>: 设备流地址、协议、状态。</li>
+					<li><code>audit_logs</code>: 管理员操作日志。</li>
+				</ul>
+				<p>后台不应该直接相信请求体里的 <code>deviceId</code>，设备身份应来自 mTLS 证书解析结果。</p>
+			</section>
+
+			<section id="mqtt">
+				<h3>MQTT 服务如何搭建</h3>
+				<p>MQTT 服务器负责设备长连接、消息上报和指令下发。当前建议使用 EMQX。</p>
+				<h4>设备接入流程</h4>
+				<ol>
+					<li>ESP32 内置 <code>ca.crt</code>、设备证书和设备私钥。</li>
+					<li>ESP32 连接 <code>mqtts://server:8883</code>。</li>
+					<li>EMQX 使用 CA 校验 ESP32 客户端证书。</li>
+					<li>ESP32 使用 CA 校验服务器证书。</li>
+					<li>EMQX 根据证书身份绑定设备 ID，并按设备权限限制 Topic。</li>
+				</ol>
+				<h4>Topic 设计</h4>
+				<ul>
+					<li><code>devices/{deviceId}/telemetry</code>: 设备遥测上报。</li>
+					<li><code>devices/{deviceId}/event</code>: 设备事件上报。</li>
+					<li><code>devices/{deviceId}/command</code>: 云端指令下发。</li>
+					<li><code>devices/{deviceId}/status</code>: 设备在线状态。</li>
+				</ul>
+			</section>
+
+			<section id="streaming">
+				<h3>流媒体服务如何搭建</h3>
+				<p>流媒体服务器负责设备视频流的接入和拉流。当前建议先基于 Nginx RTMP 学习搭建。</p>
+				<ol>
+					<li>设备或边缘网关推流到 Nginx RTMP。</li>
+					<li>Nginx 暴露拉流或统计入口。</li>
+					<li>Web 后台保存设备和流地址的绑定关系。</li>
+					<li>私有流通过网关鉴权、mTLS 或短期签名 URL 保护。</li>
+					<li>高并发拉流时扩容流媒体节点或引入 CDN。</li>
+				</ol>
+			</section>
+
+			<section id="certs">
+				<h3>CA 与证书如何搭建</h3>
+				<p>CA 用于签发服务器证书和 ESP32 设备证书，是双向认证的基础。</p>
+				<h4>需要生成什么</h4>
+				<ul>
+					<li>CA 证书和 CA 私钥。</li>
+					<li>服务器证书和服务器私钥。</li>
+					<li>每台 ESP32 独立的设备证书和设备私钥。</li>
+				</ul>
+				<h4>本地命令</h4>
+				<pre><code>python -m certs.ca.ca_tool create-ca
+python -m certs.ca.ca_tool sign-server --common-name localhost --dns-name localhost --ip-address 127.0.0.1
+python -m certs.ca.ca_tool sign-device --device-id device001
+python -m certs.ca.ca_tool install-server</code></pre>
+				<p>生成产物统一放在 <code>certs/ca/output/</code>，例如 <code>output/ca/ca.crt</code>、<code>output/issued/server.crt</code> 和 <code>output/issued/device001.crt</code>。</p>
+				<h4>CA 生成产物作用</h4>
+				<table>
+					<thead>
+						<tr>
+							<th>文件</th>
+							<th>作用</th>
+							<th>使用位置</th>
+							<th>安全要求</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><code>certs/ca/output/ca/ca.crt</code></td>
+							<td>CA 公钥证书，用来证明“哪些服务器证书、设备证书是这个 CA 签发的”。</td>
+							<td>复制给 EMQX、Nginx、ESP32。服务器用它验证设备证书，ESP32 用它验证服务器证书。</td>
+							<td>可以分发，不是私密文件，但要保证来源可信，避免设备信任错误 CA。</td>
+						</tr>
+						<tr>
+							<td><code>certs/ca/output/ca/private/ca.key</code></td>
+							<td>CA 私钥，用来签发服务器证书和设备证书。</td>
+							<td>只在签发证书时由 <code>ca_tool.py</code> 使用。</td>
+							<td>必须严格保密。泄露后别人可以伪造服务器或设备证书，应废弃整个 CA 并重新签发。</td>
+						</tr>
+						<tr>
+							<td><code>certs/ca/output/issued/server.crt</code></td>
+							<td>服务器证书，证明 EMQX 或 Nginx 服务端身份。</td>
+							<td>安装到服务器侧，例如 EMQX 的 TLS 监听器或 Nginx HTTPS/mTLS 入口。</td>
+							<td>可以随服务部署，不是私钥；需要和对应 <code>server.key</code> 配对使用。</td>
+						</tr>
+						<tr>
+							<td><code>certs/ca/output/private/server.key</code></td>
+							<td>服务器私钥，服务器用它完成 TLS 握手。</td>
+							<td>只放在服务器侧，例如 EMQX 或 Nginx 容器挂载目录。</td>
+							<td>必须保密。泄露后攻击者可能冒充你的服务器。</td>
+						</tr>
+						<tr>
+							<td><code>certs/ca/output/issued/device001.crt</code></td>
+							<td>ESP32 设备证书，证明某台设备的身份。</td>
+							<td>烧录或写入对应 ESP32，用于连接 MQTT mTLS。</td>
+							<td>可以放入设备，但每台设备应唯一，后台用证书 CN、SAN 或指纹绑定设备 ID。</td>
+						</tr>
+						<tr>
+							<td><code>certs/ca/output/private/device001.key</code></td>
+							<td>ESP32 设备私钥，设备用它证明自己持有对应证书。</td>
+							<td>只写入对应 ESP32，配合 <code>device001.crt</code> 使用。</td>
+							<td>必须保密。泄露后应禁用该设备证书并重新签发。</td>
+						</tr>
+					</tbody>
+				</table>
+				<p>每台设备独立证书可以做到单独禁用、单独追踪，避免一台设备泄露后影响全部设备。</p>
+			</section>
+
+			<section id="surge">
+				<h3>流量洪峰处理</h3>
+				<p>流量洪峰不能只靠单个服务硬扛，应使用分层成熟方案。</p>
+				<ol>
+					<li>边缘保护：Nginx <code>limit_req</code>、<code>limit_conn</code>、请求体限制和超时。</li>
+					<li>Broker 保护：EMQX 连接限制、发布速率限制、Topic ACL 和集群模式。</li>
+					<li>消息缓冲：Kafka 或 RabbitMQ 承接 MQTT 遥测流量。</li>
+					<li>缓存和背压：Redis 缓存设备元数据、幂等键和短期限流状态。</li>
+					<li>数据库保护：批量写入、异步消费、索引和连接池限制。</li>
+				</ol>
+			</section>
+		</main>
+	</div>
+</body>
+</html>

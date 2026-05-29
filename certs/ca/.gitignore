@@ -1,0 +1,7 @@
+# Generated CA output and private material
+/output/
+*.key
+*.csr
+*.srl
+index.txt*
+serial*
