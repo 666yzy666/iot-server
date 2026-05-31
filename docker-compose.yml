@@ -11,19 +11,26 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   mqtt:
-    image: emqx/emqx:5
+    image: emqx:5.8.8
+    environment:
+      EMQX_LISTENERS__SSL__DEFAULT__BIND: "0.0.0.0:8883"
+      EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__CACERTFILE: "/opt/emqx/etc/certs/ca.crt"
+      EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__CERTFILE: "/opt/emqx/etc/certs/server.crt"
+      EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__KEYFILE: "/opt/emqx/etc/certs/server.key"
+      EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__VERIFY: "verify_peer"
+      EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__FAIL_IF_NO_PEER_CERT: "true"
     ports:
       - "1883:1883"
       - "8883:8883"
       - "18083:18083"
     volumes:
-      - ./mqtt-server/emqx.conf:/opt/emqx/etc/emqx.conf:ro
       - ./certs:/opt/emqx/etc/certs:ro
     depends_on:
       - postgres
 
   streaming:
-    image: alfg/nginx-rtmp
+    build:
+      context: ./streaming-server
     ports:
       - "1935:1935"
       - "8080:8080"

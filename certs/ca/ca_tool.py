@@ -202,6 +202,9 @@ def main() -> None:
 			(ca.ca_cert_path, root_certs / "ca.crt"),
 			(ca.issued_dir / "server.crt", root_certs / "server.crt"),
 			(ca.private_dir / "server.key", root_certs / "server.key"),
+			(ca.ca_cert_path, root_certs / "cacert.pem"),
+			(ca.issued_dir / "server.crt", root_certs / "cert.pem"),
+			(ca.private_dir / "server.key", root_certs / "key.pem"),
 		]
 		for source, target in files:
 			if not source.exists():
