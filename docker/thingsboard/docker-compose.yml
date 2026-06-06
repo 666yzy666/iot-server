@@ -1,0 +1,46 @@
+services:
+  tb-postgres:
+    restart: always
+    image: postgres:16
+    environment:
+      POSTGRES_DB: thingsboard
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "15432:5432"
+    volumes:
+      - tb-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d thingsboard"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  thingsboard-ce:
+    restart: always
+    image: thingsboard/tb-node:4.3.1.1
+    ports:
+      - "18080:8080"
+      - "17070:7070"
+      - "11883:1883"
+      - "18884:8883"
+      - "15683-15688:5683-5688/udp"
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "10"
+    environment:
+      TB_SERVICE_ID: tb-ce-node
+      SPRING_DATASOURCE_URL: jdbc:postgresql://tb-postgres:5432/thingsboard
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    depends_on:
+      tb-postgres:
+        condition: service_healthy
+
+volumes:
+  tb-postgres-data:
+    name: tb-postgres-data
+    driver: local

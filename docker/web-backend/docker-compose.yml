@@ -1,0 +1,12 @@
+services:
+  web-backend:
+    build:
+      context: .
+    container_name: iot-web-backend
+    env_file:
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:${APP_PORT:-8000}:8000"
+    restart: unless-stopped

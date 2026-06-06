@@ -4,9 +4,10 @@ IoT device backend server project.
 
 ## Target Services
 
-- `web-backend`: Web admin backend and database-facing service.
-- `mqtt-server`: MQTT broker service for IoT device messaging.
-- `streaming-server`: Nginx-based streaming service for pull-stream access.
+- `docker/web-backend`: Web admin backend and database-facing service.
+- `docker/mqtt-server`: MQTT broker service configuration for IoT device messaging.
+- `docker/streaming-server`: Nginx-based streaming service for pull-stream access.
+- `docker`: Local Docker Compose orchestration for development services.
 - `docs`: Learning docs for building the server, cloud services, certificates,
   and service boundaries.
 

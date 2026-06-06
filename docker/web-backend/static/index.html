@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Vitam Device Preview</title>
+	<style>
+		body {
+			margin: 24px;
+			background: #f7f8fa;
+			color: #1f2937;
+			font-family: Arial, sans-serif;
+		}
+		main {
+			max-width: 1080px;
+			margin: 0 auto;
+		}
+		table {
+			width: 100%;
+			border-collapse: collapse;
+			background: #fff;
+		}
+		th,
+		td {
+			padding: 12px;
+			border-bottom: 1px solid #e5e7eb;
+			text-align: left;
+		}
+		th {
+			background: #eef2f7;
+		}
+		.online {
+			color: #059669;
+			font-weight: 700;
+		}
+		.offline {
+			color: #9ca3af;
+			font-weight: 700;
+		}
+	</style>
+</head>
+<body>
+	<main>
+		<h1>Vitam Device Preview</h1>
+		<table>
+			<thead>
+				<tr>
+					<th>设备 ID</th>
+					<th>在线</th>
+					<th>版本</th>
+					<th>OTA</th>
+					<th>LED</th>
+					<th>最后上报</th>
+				</tr>
+			</thead>
+			<tbody id="devices"></tbody>
+		</table>
+	</main>
+	<script>
+		async function loadDevices() {
+			const response = await fetch('/api/devices');
+			const data = await response.json();
+			const rows = data.items.map((item) => `
+				<tr>
+					<td>${item.device_id}</td>
+					<td class="${item.online ? 'online' : 'offline'}">${item.online ? '在线' : '离线'}</td>
+					<td>${item.version || ''}</td>
+					<td>${item.ota_state || ''}</td>
+					<td>${item.led_on === null ? '' : (item.led_on ? '开' : '关')}</td>
+					<td>${item.last_seen || ''}</td>
+				</tr>
+			`).join('');
+			document.getElementById('devices').innerHTML = rows;
+		}
+
+		loadDevices();
+		setInterval(loadDevices, 5000);
+	</script>
+</body>
+</html>

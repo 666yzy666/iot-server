@@ -145,6 +145,7 @@
 				<a href="#web-backend">Web 后台</a>
 				<a href="#mqtt">MQTT 服务</a>
 				<a href="#streaming">流媒体服务</a>
+				<a href="#thingsboard">ThingsBoard</a>
 				<a href="#certs">CA 与证书</a>
 				<a href="#surge">洪峰处理</a>
 			</nav>
@@ -170,12 +171,12 @@
 				<h3>工程目录编排</h3>
 				<p>本工程按业务服务拆分目录，每个目录可以独立开发、独立配置、独立容器化。</p>
 				<ul>
-					<li><code>web-backend/</code>: Web 后台、数据库访问、设备管理、证书元数据、审计日志。</li>
-					<li><code>mqtt-server/</code>: MQTT Broker 配置、设备连接认证、Topic 权限、消息限流。</li>
-					<li><code>streaming-server/</code>: Nginx 流媒体服务、拉流入口、流媒体限流和 mTLS 示例。</li>
+					<li><code>docker/web-backend/</code>: Web 后台、数据库访问、设备管理、证书元数据、审计日志。</li>
+					<li><code>docker/mqtt-server/</code>: MQTT Broker 配置、设备连接认证、Topic 权限、消息限流。</li>
+					<li><code>docker/streaming-server/</code>: Nginx 流媒体服务、拉流入口、流媒体限流和 mTLS 示例。</li>
 					<li><code>certs/</code>: 本地开发证书说明和 CA 工具。</li>
 					<li><code>docs/</code>: 单页学习手册。</li>
-					<li><code>docker-compose.yml</code>: 本地联调编排文件。</li>
+					<li><code>docker/docker-compose.yml</code>: 本地联调编排文件。</li>
 				</ul>
 				<p class="note">管理流量、设备消息流量、媒体流量的性能模型和安全边界不同，所以目录和服务都需要拆开。</p>
 			</section>
@@ -185,9 +186,9 @@
 				<p>平台目标是提供 IoT 设备后台服务，包括 Web 管理、数据库持久化、MQTT 消息、Nginx 流媒体拉流和证书认证。</p>
 				<h4>服务边界</h4>
 				<ul>
-					<li><code>web-backend</code> 管理设备、用户、证书、流地址、审计日志和数据库访问。</li>
-					<li><code>mqtt-server</code> 管理设备长连接、Topic ACL、限流和遥测转发。</li>
-					<li><code>streaming-server</code> 管理 Nginx 流媒体配置、拉流入口和流媒体限流。</li>
+					<li><code>docker/web-backend</code> 管理设备、用户、证书、流地址、审计日志和数据库访问。</li>
+					<li><code>docker/mqtt-server</code> 管理设备长连接、Topic ACL、限流和遥测转发。</li>
+					<li><code>docker/streaming-server</code> 管理 Nginx 流媒体配置、拉流入口和流媒体限流。</li>
 				</ul>
 				<h4>推荐开源栈</h4>
 				<ul>
@@ -203,7 +204,7 @@
 				<h3>核心组件是什么</h3>
 				<p>这一节先解释工程中出现的组件各自是什么、解决什么问题，以及为什么放在 IoT 服务器里。</p>
 				<h4>Docker Compose</h4>
-				<p><code>docker-compose.yml</code> 是本地联调编排文件。它不是把所有服务塞进一个容器，而是用一个文件同时管理多个独立容器，例如数据库、MQTT Broker 和流媒体服务器。</p>
+				<p><code>docker/docker-compose.yml</code> 是本地联调编排文件。它不是把所有服务塞进一个容器，而是用一个文件同时管理多个独立容器，例如数据库、MQTT Broker 和流媒体服务器。</p>
 				<h4>PostgreSQL</h4>
 				<p>PostgreSQL 是关系型数据库，用来保存设备、用户、证书、流地址、审计日志等结构化数据。它适合作为后台管理系统的核心数据存储。</p>
 				<h4>Web Backend</h4>
@@ -227,6 +228,8 @@
 			<section id="web-backend">
 				<h3>Web 后台如何搭建</h3>
 				<p>Web 后台是 IoT 云服务的大脑，负责管理平台数据和提供管理接口。</p>
+				<h4>EMQX Webhook 入库</h4>
+				<p>第一版后台不直接维护 MQTT 长连接，而是让 EMQX Webhook 把 <code>vitam/devices/+/property/post</code> 转发给 <code>docker/web-backend</code> 的 HTTP 接口。后端解析 topic 和 payload 后写入 MySQL 的 <code>device_latest_status</code> 表，后台页面读取这张表展示设备概览。</p>
 				<h4>核心职责</h4>
 				<ul>
 					<li>管理设备档案、设备证书和证书状态。</li>
@@ -275,6 +278,24 @@
 					<li>私有流通过网关鉴权、mTLS 或短期签名 URL 保护。</li>
 					<li>高并发拉流时扩容流媒体节点或引入 CDN。</li>
 				</ol>
+			</section>
+
+			<section id="thingsboard">
+				<h3>ThingsBoard CE 如何搭建</h3>
+				<p>ThingsBoard CE 是一套开源 IoT 平台，内置设备管理、遥测数据接入、规则引擎、仪表盘和告警能力。它适合用来学习完整 IoT 云平台的业务能力。</p>
+				<h4>本工程目录</h4>
+				<ul>
+					<li><code>docker/thingsboard/docker-compose.yml</code>: 独立的 ThingsBoard CE + PostgreSQL 服务栈。</li>
+					<li><code>docker/thingsboard/README.md</code>: 启动、登录和端口说明。</li>
+				</ul>
+				<h4>为什么独立 compose</h4>
+				<p>ThingsBoard 自带 HTTP、MQTT、MQTT over SSL、CoAP 等入口，这些端口会和本工程根目录中的 EMQX、Nginx 服务重叠，所以单独放在 <code>docker/thingsboard/</code> 下运行。</p>
+				<h4>启动命令</h4>
+				<pre><code>cd docker/thingsboard
+docker compose run --rm -e INSTALL_TB=true -e LOAD_DEMO=true thingsboard-ce
+docker compose up -d
+docker compose logs -f thingsboard-ce</code></pre>
+				<p>访问 <code>http://localhost:18080</code>。默认演示账号包括 <code>sysadmin@thingsboard.org / sysadmin</code> 和 <code>tenant@thingsboard.org / tenant</code>。</p>
 			</section>
 
 			<section id="certs">
