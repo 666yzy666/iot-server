@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import json
 from typing import Any
 
 
@@ -27,6 +28,14 @@ def parse_property_topic(topic: str) -> str:
 
 def parse_property_report(topic: str, payload: dict[str, Any]) -> EmqxPropertyReport:
     device_id = parse_property_topic(topic)
+    if isinstance(payload, str):
+        try:
+            payload = json.loads(payload)
+        except json.JSONDecodeError as exc:
+            raise ValueError("payload must be a JSON object") from exc
+    if not isinstance(payload, dict):
+        raise ValueError("payload must be a JSON object")
+
     params = payload.get("params")
     if not isinstance(params, dict):
         raise ValueError("payload.params must be an object")

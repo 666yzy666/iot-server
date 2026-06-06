@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 class EmqxWebhookRequest(BaseModel):
     topic: str
-    payload: dict[str, Any]
+    payload: Any
     timestamp: int | None = None
 
 
