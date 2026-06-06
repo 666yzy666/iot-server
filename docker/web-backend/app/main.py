@@ -1,6 +1,7 @@
 from pathlib import Path
+from typing import Any
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Body, Depends, FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
@@ -12,6 +13,21 @@ from app.schemas import DeviceListResponse, EmqxWebhookRequest, IngestResponse
 
 app = FastAPI(title="Vitam IoT Backend")
 STATIC_DIR = Path(__file__).resolve().parents[1] / "static"
+
+
+def parse_webhook_body(body: dict[str, Any]) -> EmqxWebhookRequest:
+    topic = body.get("topic")
+    if not isinstance(topic, str) or not topic:
+        raise ValueError("webhook topic is required")
+    if "payload" not in body:
+        raise ValueError("webhook payload is required")
+    timestamp = body.get("timestamp")
+    if timestamp is not None:
+        try:
+            timestamp = int(timestamp)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("webhook timestamp must be integer") from exc
+    return EmqxWebhookRequest(topic=topic, payload=body["payload"], timestamp=timestamp)
 
 
 @app.get("/health")
@@ -26,10 +42,11 @@ def preview_page() -> str:
 
 @app.post("/api/iot/emqx/property", response_model=IngestResponse)
 def ingest_property(
-    request: EmqxWebhookRequest,
+    body: dict[str, Any] = Body(...),
     session: Session = Depends(get_session),
 ) -> IngestResponse:
     try:
+        request = parse_webhook_body(body)
         report = parse_property_report(request.topic, request.payload)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

@@ -110,6 +110,18 @@ class ApiRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"ok": True, "device_id": "dev_001"})
 
+    def test_ingest_rejects_missing_topic_with_readable_error(self):
+        response = self.client.post(
+            "/api/iot/emqx/property",
+            json={
+                "event": "message.publish",
+                "payload": '{"params":{"device_id":"dev_001"}}',
+            },
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("topic", response.json()["detail"])
+
     def test_preview_page_serves_html(self):
         response = self.client.get("/")
 
