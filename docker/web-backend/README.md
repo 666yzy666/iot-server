@@ -13,9 +13,9 @@ MySQL, and serves the first device preview page.
 
 ## Runtime
 
-当前推荐运行方式是 Docker。服务器上 git clone 后，进入本目录，配置 `.env`，执行 `bash deploy.sh` 即可构建镜像、初始化数据库表并启动容器。
+当前推荐运行方式是 Docker 直连模式。容器使用 `network_mode: host` 直接复用宿主机网络，通过 `127.0.0.1` 直连宝塔创建的 MySQL。
 
-MySQL 仍然使用宝塔面板创建和管理。容器通过 `host.docker.internal` 访问服务器宿主机上的 MySQL。
+MySQL 仍然使用宝塔面板创建和管理。
 
 ```bash
 cp .env.example .env
@@ -26,7 +26,7 @@ bash deploy.sh
 `.env` 中的 `DATABASE_URL` 示例:
 
 ```text
-DATABASE_URL=mysql+pymysql://iot_server:你的数据库密码@host.docker.internal:3306/iot_server
+DATABASE_URL=mysql+pymysql://iot_server:你的数据库密码@127.0.0.1:3306/iot_server
 ```
 
 ## EMQX Webhook 入库
