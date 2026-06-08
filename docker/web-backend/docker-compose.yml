@@ -6,4 +6,7 @@ services:
     network_mode: host
     env_file:
       - .env
+    volumes:
+      - ./static:/app/static
+      - ./app:/app/app
     restart: unless-stopped
