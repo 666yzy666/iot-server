@@ -1,80 +1,506 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Vitam Device Preview</title>
-	<style>
-		body {
-			margin: 24px;
-			background: #f7f8fa;
-			color: #1f2937;
-			font-family: Arial, sans-serif;
-		}
-		main {
-			max-width: 1080px;
-			margin: 0 auto;
-		}
-		table {
-			width: 100%;
-			border-collapse: collapse;
-			background: #fff;
-		}
-		th,
-		td {
-			padding: 12px;
-			border-bottom: 1px solid #e5e7eb;
-			text-align: left;
-		}
-		th {
-			background: #eef2f7;
-		}
-		.online {
-			color: #059669;
-			font-weight: 700;
-		}
-		.offline {
-			color: #9ca3af;
-			font-weight: 700;
-		}
-	</style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Vitam 设备监控</title>
+    <style>
+        /* Apple Design System Colors */
+        :root {
+            --primary: #0066cc;
+            --primary-focus: #0071e3;
+            --primary-on-dark: #2997ff;
+            --ink: #1d1d1f;
+            --body: #1d1d1f;
+            --body-on-dark: #ffffff;
+            --body-muted: #cccccc;
+            --ink-muted-80: #333333;
+            --ink-muted-48: #7a7a7a;
+            --divider-soft: #f0f0f0;
+            --hairline: #e0e0e0;
+            --canvas: #ffffff;
+            --canvas-parchment: #f5f5f7;
+            --surface-pearl: #fafafc;
+            --surface-tile-1: #272729;
+            --surface-tile-2: #2a2a2c;
+            --surface-black: #000000;
+            --surface-chip-translucent: #d2d2d7;
+            --on-primary: #ffffff;
+            --on-dark: #ffffff;
+
+            /* Spacing */
+            --spacing-xxs: 4px;
+            --spacing-xs: 8px;
+            --spacing-sm: 12px;
+            --spacing-md: 17px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+            --spacing-xxl: 48px;
+            --spacing-section: 80px;
+
+            /* Border Radius */
+            --rounded-xs: 5px;
+            --rounded-sm: 8px;
+            --rounded-md: 11px;
+            --rounded-lg: 18px;
+            --rounded-pill: 9999px;
+
+            /* Semantic */
+            --semantic-success: #34c759;
+            --semantic-success-bg: #e8f5e9;
+            --semantic-warning: #ff9500;
+            --semantic-warning-bg: #fff3e0;
+            --semantic-error: #ff3b30;
+            --semantic-error-bg: #ffebee;
+            --semantic-offline: #8e8e93;
+            --semantic-offline-bg: #f2f2f7;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--canvas-parchment);
+            color: var(--ink);
+            font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 17px;
+            line-height: 1.47;
+            letter-spacing: -0.374px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Global Nav - Apple style */
+        .global-nav {
+            background: var(--surface-black);
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .global-nav-content {
+            max-width: 980px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 var(--spacing-lg);
+        }
+
+        .nav-logo {
+            color: var(--on-dark);
+            font-size: 12px;
+            font-weight: 400;
+            letter-spacing: -0.12px;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: var(--spacing-lg);
+        }
+
+        .nav-link {
+            color: var(--body-muted);
+            font-size: 12px;
+            font-weight: 400;
+            letter-spacing: -0.12px;
+            text-decoration: none;
+            transition: color 0.15s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--on-dark);
+        }
+
+        /* Product Tile - Hero Section */
+        .product-tile {
+            background: var(--canvas);
+            padding: var(--spacing-section) var(--spacing-lg);
+            text-align: center;
+        }
+
+        .hero-display {
+            font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 56px;
+            font-weight: 600;
+            line-height: 1.07;
+            letter-spacing: -0.28px;
+            color: var(--ink);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .tagline {
+            font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 21px;
+            font-weight: 600;
+            line-height: 1.19;
+            letter-spacing: 0.231px;
+            color: var(--ink-muted-48);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--spacing-md);
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-lg);
+        }
+
+        .stat-card {
+            background: var(--canvas);
+            border-radius: var(--rounded-lg);
+            padding: var(--spacing-lg);
+            text-align: center;
+            border: 1px solid var(--hairline);
+        }
+
+        .stat-value {
+            font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 40px;
+            font-weight: 600;
+            line-height: 1.1;
+            letter-spacing: 0;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 1.43;
+            letter-spacing: -0.224px;
+            color: var(--ink-muted-48);
+            margin-top: var(--spacing-xs);
+        }
+
+        /* Content Section */
+        .content-section {
+            background: var(--canvas-parchment);
+            padding: var(--spacing-xl) var(--spacing-lg);
+        }
+
+        .section-header {
+            max-width: 980px;
+            margin: 0 auto var(--spacing-lg);
+        }
+
+        .section-title {
+            font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 28px;
+            font-weight: 600;
+            line-height: 1.25;
+            letter-spacing: 0;
+            color: var(--ink);
+        }
+
+        /* Device Table - Apple Card Style */
+        .table-container {
+            max-width: 980px;
+            margin: 0 auto;
+            background: var(--canvas);
+            border-radius: var(--rounded-lg);
+            border: 1px solid var(--hairline);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--surface-pearl);
+            border-bottom: 1px solid var(--hairline);
+        }
+
+        th {
+            font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1.29;
+            letter-spacing: -0.224px;
+            color: var(--ink-muted-48);
+            text-align: left;
+            padding: var(--spacing-sm) var(--spacing-md);
+            text-transform: none;
+        }
+
+        td {
+            font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 17px;
+            font-weight: 400;
+            line-height: 1.47;
+            letter-spacing: -0.374px;
+            color: var(--body);
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--divider-soft);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: var(--surface-pearl);
+        }
+
+        /* Status Badges - Apple Style */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 1.29;
+            letter-spacing: -0.224px;
+            padding: 4px 12px;
+            border-radius: var(--rounded-pill);
+        }
+
+        .status-online {
+            background: var(--semantic-success-bg);
+            color: var(--semantic-success);
+        }
+
+        .status-offline {
+            background: var(--semantic-offline-bg);
+            color: var(--semantic-offline);
+        }
+
+        .status-updating {
+            background: var(--semantic-warning-bg);
+            color: var(--semantic-warning);
+        }
+
+        .status-error {
+            background: var(--semantic-error-bg);
+            color: var(--semantic-error);
+        }
+
+        /* LED Status */
+        .led-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .led-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .led-on .led-dot {
+            background: var(--semantic-success);
+            box-shadow: 0 0 8px var(--semantic-success);
+        }
+
+        .led-off .led-dot {
+            background: var(--semantic-offline);
+        }
+
+        /* Device ID - Monospace for tech feel */
+        .device-id {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--ink-muted-80);
+        }
+
+        /* Action Links - Apple Blue */
+        .action-link {
+            color: var(--primary);
+            font-size: 17px;
+            font-weight: 400;
+            text-decoration: none;
+            transition: color 0.15s ease;
+        }
+
+        .action-link:hover {
+            color: var(--primary-focus);
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--canvas-parchment);
+            padding: var(--spacing-xxl) var(--spacing-lg);
+            text-align: center;
+        }
+
+        .footer-text {
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 1.0;
+            letter-spacing: -0.12px;
+            color: var(--ink-muted-48);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-display {
+                font-size: 40px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            th, td {
+                padding: var(--spacing-sm);
+            }
+
+            .device-id {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-display {
+                font-size: 34px;
+            }
+        }
+    </style>
 </head>
 <body>
-	<main>
-		<h1>Vitam Device Preview</h1>
-		<table>
-			<thead>
-				<tr>
-					<th>设备 ID</th>
-					<th>在线</th>
-					<th>版本</th>
-					<th>OTA</th>
-					<th>LED</th>
-					<th>最后上报</th>
-				</tr>
-			</thead>
-			<tbody id="devices"></tbody>
-		</table>
-	</main>
-	<script>
-		async function loadDevices() {
-			const response = await fetch('/api/devices');
-			const data = await response.json();
-			const rows = data.items.map((item) => `
-				<tr>
-					<td>${item.device_id}</td>
-					<td class="${item.online ? 'online' : 'offline'}">${item.online ? '在线' : '离线'}</td>
-					<td>${item.version || ''}</td>
-					<td>${item.ota_state || ''}</td>
-					<td>${item.led_on === null ? '' : (item.led_on ? '开' : '关')}</td>
-					<td>${item.last_seen || ''}</td>
-				</tr>
-			`).join('');
-			document.getElementById('devices').innerHTML = rows;
-		}
+    <!-- Apple-style Global Nav -->
+    <nav class="global-nav">
+        <div class="global-nav-content">
+            <a href="/" class="nav-logo">Vitam</a>
+            <div class="nav-links">
+                <a href="#" class="nav-link">设备</a>
+                <a href="#" class="nav-link">监控</a>
+                <a href="#" class="nav-link">设置</a>
+            </div>
+        </div>
+    </nav>
 
-		loadDevices();
-		setInterval(loadDevices, 5000);
-	</script>
+    <!-- Product Tile - Hero -->
+    <section class="product-tile">
+        <h1 class="hero-display">Vitam 设备监控</h1>
+        <p class="tagline">实时查看所有设备状态</p>
+    </section>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-total">—</div>
+            <div class="stat-label">设备总数</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="stat-online">—</div>
+            <div class="stat-label">在线设备</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="stat-offline">—</div>
+            <div class="stat-label">离线设备</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="stat-led">—</div>
+            <div class="stat-label">LED 开启</div>
+        </div>
+    </div>
+
+    <!-- Content Section -->
+    <section class="content-section">
+        <div class="section-header">
+            <h2 class="section-title">设备列表</h2>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>设备 ID</th>
+                        <th>状态</th>
+                        <th>版本</th>
+                        <th>OTA 状态</th>
+                        <th>LED</th>
+                        <th>最后上报</th>
+                    </tr>
+                </thead>
+                <tbody id="devices"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p class="footer-text">Vitam Device Monitor · 每 5 秒自动刷新</p>
+    </footer>
+
+    <script>
+        async function loadDevices() {
+            try {
+                const response = await fetch('/api/devices');
+                const data = await response.json();
+
+                // Update stats
+                const total = data.items.length;
+                const online = data.items.filter(item => item.online).length;
+                const offline = total - online;
+                const ledOn = data.items.filter(item => item.led_on === true).length;
+
+                document.getElementById('stat-total').textContent = total;
+                document.getElementById('stat-online').textContent = online;
+                document.getElementById('stat-offline').textContent = offline;
+                document.getElementById('stat-led').textContent = ledOn;
+
+                // Render table rows
+                const rows = data.items.map((item) => {
+                    // Determine status badge
+                    let statusBadge = '';
+                    if (item.online) {
+                        statusBadge = '<span class="status-badge status-online">在线</span>';
+                    } else {
+                        statusBadge = '<span class="status-badge status-offline">离线</span>';
+                    }
+
+                    // LED indicator
+                    const ledClass = item.led_on ? 'led-on' : 'led-off';
+                    const ledText = item.led_on === null ? '—' : (item.led_on ? '开' : '关');
+
+                    return `
+                        <tr>
+                            <td><span class="device-id">${item.device_id}</span></td>
+                            <td>${statusBadge}</td>
+                            <td>${item.version || '—'}</td>
+                            <td>${item.ota_state || '—'}</td>
+                            <td>
+                                <span class="led-indicator ${ledClass}">
+                                    <span class="led-dot"></span>
+                                    <span>${ledText}</span>
+                                </span>
+                            </td>
+                            <td>${item.last_seen || '—'}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                document.getElementById('devices').innerHTML = rows || '<tr><td colspan="6" style="text-align:center;color:var(--ink-muted-48);">暂无设备</td></tr>';
+            } catch (error) {
+                console.error('Failed to load devices:', error);
+                document.getElementById('devices').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--semantic-error);">加载失败</td></tr>';
+            }
+        }
+
+        loadDevices();
+        setInterval(loadDevices, 5000);
+    </script>
 </body>
 </html>
