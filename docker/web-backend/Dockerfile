@@ -37,11 +37,18 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 复制后端源码到容器内 /app/src。
 COPY backend/src/ ./src/
 
+# 复制启动入口脚本：先初始化数据库，再启动 Web 服务。
+COPY entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
+
 # 复制前端构建产物，FastAPI 会从 /app/frontend/dist 托管静态页面。
 COPY --from=frontend-builder /build/dist/ ./frontend/dist/
 
 # 容器内监听端口；宿主机暴露规则由 docker-compose.yml 决定。
 EXPOSE 8000
 
-# 启动 FastAPI。端口保持 8000，外部端口映射交给 compose 管理。
+# 容器启动时先执行 entrypoint 初始化数据库，再启动 FastAPI。
+ENTRYPOINT ["/app/entrypoint.sh"]
+
+# FastAPI 启动命令。端口保持 8000，外部端口映射交给 compose 管理。
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]

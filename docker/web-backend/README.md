@@ -77,9 +77,10 @@ bash deploy.sh
 
 ```bash
 docker compose --env-file .env build
-docker compose --env-file .env run --rm web-backend python -m src.init_db
 docker compose --env-file .env up -d --build
 ```
+
+容器启动时会自动执行数据库初始化，成功后再启动 Web 服务。
 
 6. 宝塔网站中新建 `api.hyrain.xyz`，开启 HTTPS。
 7. 反向代理 `https://api.hyrain.xyz` 到 `http://127.0.0.1:8000`。
@@ -87,7 +88,7 @@ docker compose --env-file .env up -d --build
 
 ## Manual commands
 
-初始化数据表:
+手动初始化数据表:
 
 ```bash
 docker compose --env-file .env run --rm web-backend python -m src.init_db

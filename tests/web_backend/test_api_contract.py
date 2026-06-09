@@ -135,6 +135,8 @@ class ApiRouteTests(unittest.TestCase):
     def test_preview_page_conditionally_serves_frontend(self):
         from main import STATIC_DIR
 
+        self.assertEqual(STATIC_DIR, ROOT / "docker" / "web-backend" / "frontend" / "dist")
+
         response = self.client.get("/")
         if STATIC_DIR.is_dir():
             self.assertEqual(response.status_code, 200)

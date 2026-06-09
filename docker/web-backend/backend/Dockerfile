@@ -19,8 +19,15 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 复制后端源码。
 COPY backend/src ./src
 
+# 复制启动入口脚本：先初始化数据库，再启动 Web 服务。
+COPY entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
+
 # 容器内监听端口；宿主机暴露规则由 compose 决定。
 EXPOSE 8000
 
-# 启动 FastAPI。
+# 容器启动时先执行 entrypoint 初始化数据库，再启动 FastAPI。
+ENTRYPOINT ["/app/entrypoint.sh"]
+
+# FastAPI 启动命令。
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]

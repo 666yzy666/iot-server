@@ -8,6 +8,7 @@ README = ROOT / "docker" / "web-backend" / "README.md"
 DOCKERFILE = ROOT / "docker" / "web-backend" / "Dockerfile"
 COMPOSE = ROOT / "docker" / "web-backend" / "docker-compose.yml"
 DEPLOY = ROOT / "docker" / "web-backend" / "deploy.sh"
+ENTRYPOINT = ROOT / "docker" / "web-backend" / "entrypoint.sh"
 
 
 class DeploymentContractTests(unittest.TestCase):
@@ -27,6 +28,7 @@ class DeploymentContractTests(unittest.TestCase):
         self.assertIn("宝塔", text)
         self.assertIn("Docker", text)
         self.assertIn("bash deploy.sh", text)
+        self.assertIn("容器启动时会自动执行数据库初始化", text)
         self.assertIn("python -m src.init_db", text)
         self.assertIn("api.hyrain.xyz", text)
         self.assertIn("https://api.hyrain.xyz/api/iot/emqx/property", text)
@@ -45,10 +47,12 @@ class DeploymentContractTests(unittest.TestCase):
 
         self.assertIn("FROM python:3.12-slim", dockerfile)
         self.assertIn("ENV PYTHONPATH=/app/src", dockerfile)
+        self.assertIn("COPY entrypoint.sh ./entrypoint.sh", dockerfile)
+        self.assertIn('ENTRYPOINT ["/app/entrypoint.sh"]', dockerfile)
         self.assertIn('CMD ["uvicorn", "src.main:app"', dockerfile)
         self.assertIn("host.docker.internal:host-gateway", compose)
         self.assertIn('"127.0.0.1:${APP_PORT:-8000}:8000"', compose)
-        self.assertIn("python -m src.init_db", deploy)
+        self.assertNotIn("run --rm web-backend python -m src.init_db", deploy)
         self.assertIn("docker compose --env-file .env up -d --build", deploy)
 
     def test_container_import_path_is_documented(self):
@@ -57,3 +61,9 @@ class DeploymentContractTests(unittest.TestCase):
         )
 
         self.assertIn("ENV PYTHONPATH=/app/src", backend_dockerfile)
+
+    def test_entrypoint_initializes_database_before_startup(self):
+        text = ENTRYPOINT.read_text(encoding="utf-8")
+
+        self.assertIn("python -m src.init_db", text)
+        self.assertIn('exec "$@"', text)
