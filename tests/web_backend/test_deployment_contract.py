@@ -44,8 +44,16 @@ class DeploymentContractTests(unittest.TestCase):
         deploy = DEPLOY.read_text(encoding="utf-8")
 
         self.assertIn("FROM python:3.12-slim", dockerfile)
+        self.assertIn("ENV PYTHONPATH=/app/src", dockerfile)
         self.assertIn('CMD ["uvicorn", "src.main:app"', dockerfile)
         self.assertIn("host.docker.internal:host-gateway", compose)
         self.assertIn('"127.0.0.1:${APP_PORT:-8000}:8000"', compose)
         self.assertIn("python -m src.init_db", deploy)
         self.assertIn("docker compose --env-file .env up -d --build", deploy)
+
+    def test_container_import_path_is_documented(self):
+        backend_dockerfile = (ROOT / "docker" / "web-backend" / "backend" / "Dockerfile").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("ENV PYTHONPATH=/app/src", backend_dockerfile)

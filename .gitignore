@@ -3,6 +3,7 @@ __pycache__/
 certs/*.crt
 certs/*.key
 certs/*.pem
+docker/web-backend/.env
 
 # Frontend generated assets
 docker/web-backend/frontend/node_modules/

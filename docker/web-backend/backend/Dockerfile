@@ -7,6 +7,9 @@ FROM python:3.12-slim AS backend-runtime
 # 后端运行工作目录。
 WORKDIR /app
 
+# 后端源码位于 /app/src，加入 PYTHONPATH 后，代码中的 api/config/services 等顶层导入才能生效。
+ENV PYTHONPATH=/app/src
+
 # 先复制依赖清单，利用 Docker 缓存减少重复安装。
 COPY backend/requirements.txt .
 
