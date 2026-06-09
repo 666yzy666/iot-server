@@ -13,9 +13,9 @@ MySQL, and serves the first device preview page.
 
 ## Runtime
 
-当前推荐运行方式是 Docker bridge 模式。容器只把 Web 服务绑定到宿主机
-`127.0.0.1:${APP_PORT:-8000}`，由宝塔/Nginx 反向代理对外提供 HTTPS。
-容器通过 `host.docker.internal` 访问宝塔创建的 MySQL。
+当前推荐运行方式是 Docker host 网络模式。容器直接复用宿主机网络，可通过
+`127.0.0.1` 访问宝塔创建的 MySQL，避免额外配置 Docker 网段的 MySQL 授权。
+对外访问仍建议统一由宝塔/Nginx 提供 HTTPS。
 
 MySQL 仍然使用宝塔面板创建和管理。
 
@@ -28,7 +28,7 @@ bash deploy.sh
 `.env` 中的 `DATABASE_URL` 示例:
 
 ```text
-DATABASE_URL=mysql+pymysql://iot_server:你的数据库密码@host.docker.internal:3306/iot_server
+DATABASE_URL=mysql+pymysql://iot_server:你的数据库密码@127.0.0.1:3306/iot_server
 ```
 
 ## EMQX Webhook 入库

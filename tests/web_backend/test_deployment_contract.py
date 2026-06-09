@@ -16,7 +16,7 @@ class DeploymentContractTests(unittest.TestCase):
         text = ENV_EXAMPLE.read_text(encoding="utf-8")
 
         self.assertIn(
-            "DATABASE_URL=mysql+pymysql://iot_server:iot_dev_password@host.docker.internal:3306/iot_server",
+            "DATABASE_URL=mysql+pymysql://iot_server:iot_dev_password@127.0.0.1:3306/iot_server",
             text,
         )
         self.assertIn("EMQX_WEBHOOK_SECRET=hyrain_emqx_webhook_secret_example", text)
@@ -50,8 +50,9 @@ class DeploymentContractTests(unittest.TestCase):
         self.assertIn("COPY entrypoint.sh ./entrypoint.sh", dockerfile)
         self.assertIn('ENTRYPOINT ["/app/entrypoint.sh"]', dockerfile)
         self.assertIn('CMD ["uvicorn", "src.main:app"', dockerfile)
-        self.assertIn("host.docker.internal:host-gateway", compose)
-        self.assertIn('"127.0.0.1:${APP_PORT:-8000}:8000"', compose)
+        self.assertIn("network_mode: host", compose)
+        self.assertNotIn("\n    extra_hosts:", compose)
+        self.assertNotIn("\n    ports:", compose)
         self.assertNotIn("run --rm web-backend python -m src.init_db", deploy)
         self.assertIn("docker compose --env-file .env up -d --build", deploy)
 

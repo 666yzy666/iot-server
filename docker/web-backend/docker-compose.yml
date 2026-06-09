@@ -18,32 +18,20 @@ services:
     #   APP_PORT: "8000"
     #   LOG_LEVEL: "info"
     environment: {}
-    # 让容器访问宿主机服务，例如宝塔管理的 MySQL。
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    # 只绑定宿主机本地端口，对外访问统一走宝塔/Nginx HTTPS。
-    ports:
-      - "127.0.0.1:${APP_PORT:-8000}:8000"
+    # 使用宿主机网络，容器内可直接通过 127.0.0.1 访问宝塔 MySQL。
+    # 注意：host 网络下 ports/networks 不生效，端口暴露由应用监听地址和服务器防火墙控制。
+    network_mode: host
+    # 如需改回 bridge 网络，可参考：
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"
+    # ports:
+    #   - "127.0.0.1:${APP_PORT:-8000}:8000"
     # 正常部署不挂载目录；本地开发需要热更新时可参考：
     # volumes:
     #   - ./backend/src:/app/src:ro
     #   - ./frontend/dist:/app/frontend/dist:ro
     volumes: []
-    # 默认接入本服务独立网络；如需接入共享网络，可再追加：
-    # networks:
-    #   - web-backend-net
-    #   - iot-shared-net
-    networks:
-      - web-backend-net
     restart: unless-stopped
 
 # Web 后台自身无状态，暂不需要命名卷。
 volumes: {}
-
-networks:
-  # 单服务栈使用的独立 bridge 网络；如需使用外部已存在网络可参考：
-  # web-backend-net:
-  #   external: true
-  #   name: iot-shared-net
-  web-backend-net:
-    driver: bridge
