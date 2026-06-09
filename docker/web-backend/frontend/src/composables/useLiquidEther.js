@@ -221,6 +221,7 @@ class Simulation {
   resize(cw, ch) { this.calcSize(cw, ch); Object.values(this.fbos).forEach(f => f.setSize(this.fboSize.x, this.fboSize.y)) }
   update(renderer, opts) {
     this.boundarySpace.copy(opts.isBounce ? new THREE.Vector2(0, 0) : this.cellScale)
+    this.advection.uniforms.velocity.value = this.fbos.vel_0.texture
     this.advection.render(renderer, { dt: opts.dt, isBounce: opts.isBounce, BFECC: opts.BFECC })
     this.externalForce.render(renderer, { diff: opts.diff, coords: opts.coords, mouseForce: opts.mouseForce, cursorSize: opts.cursorSize, cellScale: this.cellScale })
     this.divergence.render(renderer, { vel: this.fbos.vel_1 })
@@ -280,14 +281,44 @@ export function useLiquidEther(options = {}) {
     output = new OutputRenderer(paletteTex, bgVec4)
     output.init(cw, ch)
 
+    // Seed the flow with an initial impulse burst
+    const seed = () => {
+      const sim = output.simulation
+      // Apply forces at several points to create initial motion
+      const seeds = [{x:-0.5,y:-0.3},{x:0.3,y:0.5},{x:-0.2,y:0.2},{x:0.6,y:-0.4}]
+      const origOpts = Object.assign({}, sim.options)
+      seeds.forEach(s => {
+        const o = Object.assign({}, origOpts, {
+          diff: { x: s.x, y: s.y },
+          coords: { x: s.x, y: s.y },
+          mouseForce: 80
+        })
+        sim.update(common.renderer, o)
+      })
+    }
+    seed()
+
     let lastInteraction = 0
     mouse.onInteract = () => { lastInteraction = performance.now() }
+
+    let ambientPhase = 0
 
     running = true
     function loop() {
       if (!running) return
       mouse.update()
       common.update()
+      // Gentle rotating ambient currents (keeps fluid alive without mouse)
+      ambientPhase += 0.015
+      if (output && output.simulation) {
+        const sim = output.simulation
+        // Merge mouse diff with ambient rotation
+        const baseX = mouse.diff.x / 2
+        const baseY = mouse.diff.y / 2
+        sim.options.mouseForce = 20
+        sim.options.diff = { x: baseX + Math.sin(ambientPhase) * 0.08, y: baseY + Math.cos(ambientPhase * 0.7) * 0.08 }
+        sim.options.coords = { x: Math.sin(ambientPhase * 0.5) * 0.3, y: Math.cos(ambientPhase * 0.3) * 0.3 }
+      }
       if (output) output.render(common.renderer)
       animId = requestAnimationFrame(loop)
     }
