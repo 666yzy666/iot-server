@@ -1,5 +1,6 @@
 <template>
   <div class="svc-panel">
+    <!-- Service Cards -->
     <div class="svc-grid">
       <div class="svc-card" v-for="svc in serviceList" :key="svc.id">
         <div class="svc-info">
@@ -12,7 +13,24 @@
         </button>
       </div>
     </div>
-    <div v-if="resultMsg" class="result-banner" :class="resultOk ? 'ok' : 'err'">{{ resultMsg }}</div>
+
+    <!-- Request Log -->
+    <div class="log-section" v-if="requestLog.length">
+      <div class="log-head">
+        <span>请求日志</span>
+        <button class="ghost-btn" @click.stop="clearLog">清除</button>
+      </div>
+      <div class="log-list">
+        <div class="log-row" v-for="(entry, i) in requestLog" :key="i">
+          <span class="log-time">{{ entry.time }}</span>
+          <span class="log-svc">{{ entry.serviceId }}</span>
+          <span class="log-status" :class="entry.status">{{ entry.status === 'ok' ? '成功' : '失败' }}</span>
+          <span class="log-msg">{{ entry.message }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- History -->
     <div class="history">
       <div class="history-head">
         <span>最近上报</span>
@@ -51,17 +69,31 @@ const getResult = inject('getServiceResult')
 const historyItems = ref([])
 const historyError = ref('')
 const sending = ref('')
-const resultMsg = ref('')
-const resultOk = ref(true)
+const requestLog = ref([])
+
+function nowStr() {
+  return new Date().toLocaleTimeString('zh-CN', { hour12: false })
+}
 
 async function doInvoke(svcId, btn) {
   sending.value = svcId
-  resultMsg.value = ''
-  await invoke(props.deviceId, svcId, btn)
-  const r = getResult(props.deviceId, svcId)
-  if (r) { resultMsg.value = r.message; resultOk.value = r.status === 'ok' }
+  const time = nowStr()
+  requestLog.value.unshift({ time, serviceId: svcId, status: 'sending', message: '正在发送...' })
+  try {
+    await invoke(props.deviceId, svcId, btn)
+    const r = getResult(props.deviceId, svcId)
+    if (r) {
+      requestLog.value[0].status = r.status === 'ok' ? 'ok' : 'err'
+      requestLog.value[0].message = r.message
+    }
+  } catch (e) {
+    requestLog.value[0].status = 'err'
+    requestLog.value[0].message = e.message || '请求失败'
+  }
   sending.value = ''
 }
+
+function clearLog() { requestLog.value = [] }
 
 async function loadHistory() {
   historyError.value = ''
@@ -108,14 +140,54 @@ watch(() => props.deviceId, loadHistory)
 }
 .invoke-btn:hover { box-shadow: var(--glow); transform: translateY(-1px); }
 .invoke-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
-.result-banner {
-  font-size: 12px;
-  padding: 8px 14px;
+
+/* ===== Request Log ===== */
+.log-section {
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   margin-bottom: 14px;
+  overflow: hidden;
 }
-.result-banner.ok { background: var(--success-bg); color: var(--success); }
-.result-banner.err { background: var(--danger-bg); color: var(--danger); }
+.log-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+}
+.log-list {
+  max-height: 180px;
+  overflow-y: auto;
+  font-size: 11px;
+  font-family: ui-monospace, monospace;
+}
+.log-row {
+  display: grid;
+  grid-template-columns: 64px 80px 40px 1fr;
+  gap: 8px;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  align-items: center;
+}
+.log-row:last-child { border-bottom: none; }
+.log-row:hover { background: var(--bg-elevated); }
+.log-time { color: var(--text-dim); }
+.log-svc { color: var(--text-primary); font-weight: 500; }
+.log-status { font-weight: 600; }
+.log-status.ok { color: var(--success); }
+.log-status.err { color: var(--danger); }
+.log-status.sending { color: var(--warning); }
+.log-msg {
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ===== History ===== */
 .history {
   border-top: 1px solid var(--border);
   padding-top: 14px;
@@ -133,7 +205,14 @@ watch(() => props.deviceId, loadHistory)
   font-family: var(--font);
 }
 .ghost-btn:hover { border-color: var(--primary); color: var(--primary); }
-.history-list { display: grid; gap: 6px; }
+.history-list {
+  max-height: 360px;
+  overflow-y: auto;
+  display: grid;
+  gap: 4px;
+}
+.history-list::-webkit-scrollbar { width: 4px; }
+.history-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 .history-row {
   display: grid;
   grid-template-columns: 160px 1fr;
@@ -150,5 +229,6 @@ watch(() => props.deviceId, loadHistory)
 @media (max-width: 760px) {
   .svc-grid { grid-template-columns: 1fr; }
   .history-row { grid-template-columns: 100px 1fr; }
+  .log-row { grid-template-columns: 56px 70px 34px 1fr; font-size: 10px; }
 }
 </style>
