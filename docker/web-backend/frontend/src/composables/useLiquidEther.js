@@ -269,7 +269,7 @@ export function useLiquidEther(options = {}) {
     el.style.overflow = 'hidden'
 
     paletteTex = makePaletteTexture(colors)
-    bgVec4 = new THREE.Vector4(0.04, 0.025, 0.05, 0.4)
+    bgVec4 = new THREE.Vector4(0, 0, 0, 0)
 
     common = setupCommon()
     const canvas = common.init(el)
@@ -316,9 +316,9 @@ export function useLiquidEther(options = {}) {
         // Merge mouse diff with ambient rotation
         const baseX = mouse.diff.x / 2
         const baseY = mouse.diff.y / 2
-        sim.options.mouseForce = 20
-        sim.options.diff = { x: baseX + Math.sin(ambientPhase) * 0.08, y: baseY + Math.cos(ambientPhase * 0.7) * 0.08 }
-        sim.options.coords = { x: Math.sin(ambientPhase * 0.5) * 0.3, y: Math.cos(ambientPhase * 0.3) * 0.3 }
+        sim.options.mouseForce = 8
+        sim.options.diff = { x: baseX + Math.sin(ambientPhase) * 0.03, y: baseY + Math.cos(ambientPhase * 0.7) * 0.03 }
+        sim.options.coords = { x: Math.sin(ambientPhase * 0.5) * 0.1, y: Math.cos(ambientPhase * 0.3) * 0.1 }
       }
       if (output) output.render(common.renderer)
       animId = requestAnimationFrame(loop)
