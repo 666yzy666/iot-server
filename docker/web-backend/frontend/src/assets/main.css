@@ -1,36 +1,32 @@
 :root {
-  /* 马卡龙色系 — Macaron Palette */
-  --bg-body: #ede9fe;
-  --bg-card: #fefcff;
-  --bg-elevated: #f5f0ff;
-  --bg-hover: #ddd6fe;
-  --border: #c4b5fd;
-  --border-subtle: rgba(196,181,253,0.35);
-  --primary: #8b5cf6;
+  --bg-body: #0f0d15;
+  --bg-card: #17131e;
+  --bg-elevated: #1f1a2c;
+  --bg-hover: #2a2340;
+  --border: #2c2540;
+  --border-subtle: rgba(44,37,64,0.4);
+  --primary: #a855f7;
   --primary-dim: #7c3aed;
-  --primary-glow: rgba(139,92,246,0.18);
-  --secondary: #f9a8d4;
-  /* 粉蓝点缀 */
-  
-  --accent-blue: #93c5fd;
-  --text-primary: #2e1065;
-  --text-secondary: #4c1d95;
-  --text-muted: #7c3aed;
-  --text-dim: #a78bfa;
-  --success: #10b981;
-  --success-bg: rgba(16,185,129,0.12);
-  --warning: #d97706;
-  --warning-bg: rgba(217,119,6,0.12);
-  --danger: #ec4899;
-  --danger-bg: rgba(236,72,153,0.12);
-  --offline: #a1a1aa;
+  --primary-glow: rgba(168,85,247,0.25);
+  --secondary: #c084fc;
+  --text-primary: #f0edf5;
+  --text-secondary: #c9c4d6;
+  --text-muted: #8a84a0;
+  --text-dim: #5f5978;
+  --success: #22c55e;
+  --success-bg: rgba(34,197,94,0.12);
+  --warning: #f59e0b;
+  --warning-bg: rgba(245,158,11,0.12);
+  --danger: #ef4444;
+  --danger-bg: rgba(239,68,68,0.12);
+  --offline: #6b7280;
   --radius-sm: 8px;
   --radius: 12px;
   --radius-lg: 18px;
-  --shadow: 0 2px 8px rgba(139,92,246,0.08);
-  --shadow-lg: 0 8px 32px rgba(139,92,246,0.12);
-  --glow: 0 0 20px rgba(139,92,246,0.15);
-  --gradient: linear-gradient(135deg,#f9a8d4 0%,#a78bfa 30%,#93c5fd 60%,#a78bfa 80%,#f9a8d4 100%);
+  --shadow: 0 2px 8px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+  --glow: 0 0 20px rgba(168,85,247,0.25);
+  --gradient: linear-gradient(135deg,#fff 0%,#a855f7 25%,#7c3aed 50%,#a855f7 75%,#fff 100%);
   --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
   --font: 'Inter','SF Pro Text',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 }
@@ -54,7 +50,7 @@ body{
 #glowCursor{
   position:fixed;pointer-events:none;z-index:0;
   width:300px;height:300px;border-radius:50%;
-  background:radial-gradient(circle,rgba(139,92,246,0.06) 0%,transparent 70%);
+  background:radial-gradient(circle,rgba(168,85,247,0.08) 0%,transparent 70%);
   transform:translate(-50%,-50%);
   transition:opacity 0.4s;opacity:0;
   will-change:transform;
@@ -71,7 +67,7 @@ body{
   position:fixed;top:0;left:0;width:0;height:0;
   pointer-events:none;z-index:9999;
   will-change:transform;
-  filter:drop-shadow(0 0 4px rgba(0,0,0,.2));
+  filter:drop-shadow(0 0 4px rgba(0,0,0,.5));
 }
 .tc-dot{
   position:absolute;left:50%;top:50%;
