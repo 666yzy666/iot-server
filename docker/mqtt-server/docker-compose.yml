@@ -18,12 +18,12 @@ services:
       EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__KEYFILE: "/opt/emqx/etc/certs/server.key"
       EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__VERIFY: "verify_peer"
       EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__FAIL_IF_NO_PEER_CERT: "true"
-    # 8883 是设备 mTLS 入口；生产环境需保护 Dashboard/API 端口。
+    # 8883 是设备 mTLS 入口；开发端口和 Dashboard/API 只绑定本机。
     ports:
-      - "1883:1883"
+      - "127.0.0.1:1883:1883"
       - "8883:8883"
-      - "8083:8083"
-      - "18083:18083"
+      - "127.0.0.1:8083:8083"
+      - "127.0.0.1:18083:18083"
     # Broker 配置和证书只读挂载，避免容器内误改。
     volumes:
       - ./emqx.conf:/opt/emqx/etc/emqx.conf:ro

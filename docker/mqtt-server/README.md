@@ -18,9 +18,13 @@ engine integrations.
 
 ## Ports
 
-- `1883`: local plain MQTT for development only.
+- `1883`: local plain MQTT for development only, bound to `127.0.0.1`.
 - `8883`: MQTT over TLS/mTLS for devices.
-- `18083`: EMQX dashboard.
+- `18083`: EMQX dashboard/API, bound to `127.0.0.1`.
+
+Do not publish the EMQX dashboard directly to the public internet. Logs such as
+`unexpected_api_access` with paths like `/.git/config` are usually scanners
+probing the dashboard/API endpoint through a public reverse proxy.
 
 ## Run This Service
 
