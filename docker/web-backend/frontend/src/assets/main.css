@@ -1,28 +1,28 @@
 :root {
   /* 马卡龙色系 — Macaron Palette */
-  --bg-body: #faf5ff;
-  --bg-card: #ffffff;
+  --bg-body: #ede9fe;
+  --bg-card: #fefcff;
   --bg-elevated: #f5f0ff;
-  --bg-hover: #ede9fe;
-  --border: #e0d4fc;
-  --border-subtle: rgba(224,212,252,0.5);
+  --bg-hover: #ddd6fe;
+  --border: #c4b5fd;
+  --border-subtle: rgba(196,181,253,0.35);
   --primary: #8b5cf6;
   --primary-dim: #7c3aed;
   --primary-glow: rgba(139,92,246,0.18);
-  --secondary: #a78bfa;
+  --secondary: #f9a8d4;
   /* 粉蓝点缀 */
-  --accent-pink: #f9a8d4;
+  
   --accent-blue: #93c5fd;
-  --text-primary: #1e1b4b;
-  --text-secondary: #3730a3;
-  --text-muted: #6d28d9;
+  --text-primary: #2e1065;
+  --text-secondary: #4c1d95;
+  --text-muted: #7c3aed;
   --text-dim: #a78bfa;
   --success: #10b981;
-  --success-bg: rgba(16,185,129,0.1);
+  --success-bg: rgba(16,185,129,0.12);
   --warning: #d97706;
-  --warning-bg: rgba(217,119,6,0.1);
+  --warning-bg: rgba(217,119,6,0.12);
   --danger: #ec4899;
-  --danger-bg: rgba(236,72,153,0.1);
+  --danger-bg: rgba(236,72,153,0.12);
   --offline: #a1a1aa;
   --radius-sm: 8px;
   --radius: 12px;
