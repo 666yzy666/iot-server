@@ -266,10 +266,10 @@ export function useLiquidEther(options = {}) {
     try {
     const el = containerRef.value
     if (!el) { console.warn('[LiquidEther] no container element'); return }
-    el.style.position = 'relative'; el.style.overflow = 'hidden'
+    el.style.overflow = 'hidden'
 
     paletteTex = makePaletteTexture(colors)
-    bgVec4 = new THREE.Vector4(0.06, 0.04, 0.08, 1.0)
+    bgVec4 = new THREE.Vector4(0.04, 0.025, 0.05, 0.4)
 
     common = setupCommon()
     const canvas = common.init(el)
