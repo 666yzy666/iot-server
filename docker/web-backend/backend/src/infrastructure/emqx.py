@@ -35,22 +35,18 @@ def parse_property_report(topic: str, payload: dict[str, Any]) -> EmqxPropertyRe
             raise ValueError("payload must be a JSON object") from exc
     if not isinstance(payload, dict):
         raise ValueError("payload must be a JSON object")
-
     params = payload.get("params")
     if not isinstance(params, dict):
         raise ValueError("payload.params must be an object")
-
     payload_device_id = params.get("device_id", device_id)
     if payload_device_id != device_id:
         raise ValueError(f"payload device_id {payload_device_id} does not match topic {device_id}")
-
     online = params.get("online")
     led_on = params.get("led_on")
     if online is not None and not isinstance(online, bool):
         raise ValueError("params.online must be boolean")
     if led_on is not None and not isinstance(led_on, bool):
         raise ValueError("params.led_on must be boolean")
-
     return EmqxPropertyReport(
         device_id=device_id,
         online=online,

@@ -1,8 +1,8 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.emqx import EmqxPropertyReport
-from app.models import Device, DeviceLatestStatus, DevicePropertyHistory, utc_now
+from infrastructure.emqx import EmqxPropertyReport
+from models.device import Device, DeviceLatestStatus, DevicePropertyHistory, utc_now
 
 
 class DeviceRepository:
@@ -52,22 +52,6 @@ class DeviceRepository:
                 "led_on": row.led_on,
                 "last_seen": row.last_seen.isoformat() if row.last_seen else "",
                 "raw_payload": row.raw_payload,
-            }
-            for row in rows
-        ]
-
-    def list_property_history(self, device_id: str) -> list[dict]:
-        rows = self.session.execute(
-            select(DevicePropertyHistory)
-            .where(DevicePropertyHistory.device_id == device_id)
-            .order_by(DevicePropertyHistory.created_at)
-        ).scalars()
-        return [
-            {
-                "device_id": row.device_id,
-                "topic": row.topic,
-                "payload": row.payload,
-                "created_at": row.created_at.isoformat() if row.created_at else "",
             }
             for row in rows
         ]

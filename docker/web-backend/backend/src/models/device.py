@@ -1,16 +1,14 @@
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import Boolean, DateTime, JSON, String
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import Boolean, DateTime, Integer, JSON, String
+from sqlalchemy.orm import Mapped, mapped_column
+
+from .base import Base
 
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
-
-
-class Base(DeclarativeBase):
-    pass
 
 
 class Device(Base):
@@ -37,7 +35,7 @@ class DeviceLatestStatus(Base):
 class DevicePropertyHistory(Base):
     __tablename__ = "device_property_history"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     device_id: Mapped[str] = mapped_column(String(64), index=True)
     topic: Mapped[str] = mapped_column(String(255))
     payload: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)

@@ -1,17 +1,5 @@
 from typing import Any
-
 from pydantic import BaseModel, Field
-
-
-class EmqxWebhookRequest(BaseModel):
-    topic: str
-    payload: Any
-    timestamp: int | None = None
-
-
-class IngestResponse(BaseModel):
-    ok: bool
-    device_id: str
 
 
 class DeviceItem(BaseModel):

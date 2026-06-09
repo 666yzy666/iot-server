@@ -7,5 +7,5 @@ if [ ! -f .env ]; then
 fi
 
 docker compose --env-file .env build
-docker compose --env-file .env run --rm web-backend python -m app.init_db
+docker compose --env-file .env run --rm web-backend python -m src.init_db
 docker compose --env-file .env up -d --build

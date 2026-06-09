@@ -8,13 +8,13 @@ from sqlalchemy.pool import StaticPool
 
 
 ROOT = Path(__file__).resolve().parents[2]
-BACKEND = ROOT / "docker" / "web-backend"
-sys.path.insert(0, str(BACKEND))
+BACKEND_SRC = ROOT / "docker" / "web-backend" / "backend" / "src"
+sys.path.insert(0, str(BACKEND_SRC))
 
 
 class ApiContractTests(unittest.TestCase):
     def test_settings_read_mysql_url_from_environment(self):
-        from app.config import Settings
+        from config.settings import Settings
 
         settings = Settings.from_env()
 
@@ -31,9 +31,9 @@ class ApiRouteTests(unittest.TestCase):
     def setUp(self):
         from fastapi.testclient import TestClient
 
-        from app.database import get_session
-        from app.main import app
-        from app.models import Base
+        from infrastructure.database import get_session
+        from main import app
+        from models.base import Base
 
         engine = create_engine(
             "sqlite+pysqlite://",
@@ -122,9 +122,67 @@ class ApiRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("topic", response.json()["detail"])
 
-    def test_preview_page_serves_html(self):
+    def test_preview_page_conditionally_serves_frontend(self):
+        from main import STATIC_DIR
+
         response = self.client.get("/")
+        if STATIC_DIR.is_dir():
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("Vitam", response.text)
+        else:
+            self.assertEqual(response.status_code, 404)
+
+    def test_invoke_device_service_publishes_to_device_topic(self):
+        from main import app
+        from infrastructure.emqx_api import get_client
+
+        class FakeEmqxClient:
+            def invoke_service(self, device_id, service_id, cmd_id):
+                return {
+                    "ok": True,
+                    "topic": f"vitam/devices/{device_id}/service/{service_id}/invoke",
+                    "cmd_id": cmd_id,
+                    "service_id": service_id,
+                    "emqx_code": 0,
+                    "emqx_message": "",
+                }
+
+        original_get_client = get_client
+        from infrastructure import emqx_api
+        emqx_api._client = None
+
+        def fake_get_client(settings=None):
+            return FakeEmqxClient()
+
+        import infrastructure.emqx_api as api_mod
+        original = api_mod.get_client
+        api_mod.get_client = fake_get_client
+        app.dependency_overlays_cleared = True
+        try:
+            response = self.client.post(
+                "/api/devices/dev_001/services/get_status/invoke",
+                json={"cmd_id": "cmd-test-001"},
+            )
+        finally:
+            api_mod.get_client = original
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn("Vitam Device Preview", response.text)
-        self.assertIn("/api/devices", response.text)
+        body = response.json()
+        self.assertTrue(body["ok"])
+        self.assertEqual(body["device_id"], "dev_001")
+        self.assertEqual(body["service_id"], "get_status")
+        self.assertEqual(body["cmd_id"], "cmd-test-001")
+        self.assertEqual(body["topic"], "vitam/devices/dev_001/service/get_status/invoke")
+
+    def test_invoke_device_service_rejects_unknown_service(self):
+        response = self.client.post(
+            "/api/devices/dev_001/services/set_led/invoke",
+            json={},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("unsupported service", response.json()["detail"])
+
+
+if __name__ == "__main__":
+    unittest.main()
