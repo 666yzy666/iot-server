@@ -1,46 +1,82 @@
+# 独立的 ThingsBoard CE 学习栈。
+# 端口会和 EMQX 等服务重叠，因此和主 IoT 栈分开运行。
+name: iot-thingsboard
+
 services:
   tb-postgres:
-    restart: always
     image: postgres:16
+    container_name: iot-thingsboard-postgres
+    # 当前不需要 env 文件，保留字段作为标准占位；示例：
+    # env_file:
+    #   - .env
+    env_file: []
+    # 演示数据库账号；离开本地学习环境前必须替换。
     environment:
       POSTGRES_DB: thingsboard
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
       - "15432:5432"
+    # ThingsBoard 数据需要在容器重建后保留。
     volumes:
       - tb-postgres-data:/var/lib/postgresql/data
+    networks:
+      - thingsboard-net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d thingsboard"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
+    restart: always
 
   thingsboard-ce:
-    restart: always
     image: thingsboard/tb-node:4.3.1.1
+    container_name: iot-thingsboard-ce
+    # 当前不需要 env 文件，保留字段作为标准占位；示例：
+    # env_file:
+    #   - .env
+    env_file: []
+    # ThingsBoard 通过 Compose 服务名连接 PostgreSQL。
+    environment:
+      TB_SERVICE_ID: tb-ce-node
+      SPRING_DATASOURCE_URL: jdbc:postgresql://tb-postgres:5432/thingsboard
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
     ports:
       - "18080:8080"
       - "17070:7070"
       - "11883:1883"
       - "18884:8883"
       - "15683-15688:5683-5688/udp"
+    # 演示栈不挂载应用目录；如需挂载自定义配置可参考：
+    # volumes:
+    #   - ./conf:/etc/thingsboard/conf:ro
+    volumes: []
+    # 默认接入 ThingsBoard 内部网络；如需接入共享网络，可再追加。
+    networks:
+      - thingsboard-net
+    depends_on:
+      tb-postgres:
+        condition: service_healthy
+    # 限制演示环境长期运行时的日志增长。
     logging:
       driver: json-file
       options:
         max-size: "100m"
         max-file: "10"
-    environment:
-      TB_SERVICE_ID: tb-ce-node
-      SPRING_DATASOURCE_URL: jdbc:postgresql://tb-postgres:5432/thingsboard
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
-    depends_on:
-      tb-postgres:
-        condition: service_healthy
+    restart: always
 
 volumes:
+  # Docker 管理的命名卷，用于保存 ThingsBoard PostgreSQL 数据。
   tb-postgres-data:
     name: tb-postgres-data
     driver: local
+
+networks:
+  # ThingsBoard 与其数据库使用的独立 bridge 网络；如需使用外部已存在网络可参考：
+  # thingsboard-net:
+  #   external: true
+  #   name: iot-shared-net
+  thingsboard-net:
+    driver: bridge

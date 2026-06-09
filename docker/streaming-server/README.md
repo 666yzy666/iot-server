@@ -14,3 +14,15 @@ This folder contains Nginx-based streaming service configuration.
 
 The initial config uses Nginx RTMP and exposes HTTP-FLV style pull paths through
 Nginx. HLS can be added later if browser playback is required.
+
+## Run This Service
+
+Run streaming only from this directory:
+
+```bash
+docker compose up -d --build
+docker compose logs -f streaming
+```
+
+The root `docker/docker-compose.yml` can also orchestrate this service together
+with the web backend, PostgreSQL, and MQTT service.

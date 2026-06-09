@@ -1,0 +1,44 @@
+# Nginx 流媒体单服务编排。
+# 调试 RTMP 推流或 HTTP 拉流时，在本目录执行 docker compose。
+name: iot-streaming-server
+
+services:
+  streaming:
+    image: iot-streaming-server:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: iot-streaming-server
+    # 当前不需要 env 文件，保留字段作为标准占位；示例：
+    # env_file:
+    #   - .env
+    env_file: []
+    # 后续如有非敏感 Nginx 运行参数，可放在这里；示例：
+    # environment:
+    #   NGINX_WORKER_PROCESSES: "auto"
+    environment: {}
+    # 1935 用于 RTMP 推流，8080 用于 HTTP 状态页和拉流入口。
+    ports:
+      - "1935:1935"
+      - "8080:8080"
+    # 只读挂载 Nginx 配置，确保行为由本目录配置控制。
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      # 可按需增加日志或媒体目录挂载；示例：
+      # - ./logs:/var/log/nginx
+      # - ./media:/srv/media
+    # 默认接入本服务独立网络；如需接入共享网络，可再追加。
+    networks:
+      - streaming-net
+    restart: unless-stopped
+
+# 默认不保存流媒体持久化数据。
+volumes: {}
+
+networks:
+  # 单服务栈使用的独立 bridge 网络；如需使用外部已存在网络可参考：
+  # streaming-net:
+  #   external: true
+  #   name: iot-shared-net
+  streaming-net:
+    driver: bridge

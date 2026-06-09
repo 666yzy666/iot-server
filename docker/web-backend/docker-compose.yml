@@ -1,12 +1,49 @@
+# Web 后台单服务编排。
+# 只部署 FastAPI + Vue 后台页面时，在本目录执行 docker compose。
+name: iot-web-backend
+
 services:
   web-backend:
+    # 固定镜像名，方便脚本稳定地重新构建和部署。
+    image: iot-web-backend:latest
     build:
       context: .
+      dockerfile: Dockerfile
     container_name: iot-web-backend
+    # 运行时密钥和环境差异放在 .env，不提交到 git。
     env_file:
       - .env
+    # 预留给可以提交到源码里的少量非敏感覆盖项；示例：
+    # environment:
+    #   APP_PORT: "8000"
+    #   LOG_LEVEL: "info"
+    environment: {}
+    # 让容器访问宿主机服务，例如宝塔管理的 MySQL。
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    # 只绑定宿主机本地端口，对外访问统一走宝塔/Nginx HTTPS。
     ports:
       - "127.0.0.1:${APP_PORT:-8000}:8000"
+    # 正常部署不挂载目录；本地开发需要热更新时可参考：
+    # volumes:
+    #   - ./backend/src:/app/src:ro
+    #   - ./frontend/dist:/app/frontend/dist:ro
+    volumes: []
+    # 默认接入本服务独立网络；如需接入共享网络，可再追加：
+    # networks:
+    #   - web-backend-net
+    #   - iot-shared-net
+    networks:
+      - web-backend-net
     restart: unless-stopped
+
+# Web 后台自身无状态，暂不需要命名卷。
+volumes: {}
+
+networks:
+  # 单服务栈使用的独立 bridge 网络；如需使用外部已存在网络可参考：
+  # web-backend-net:
+  #   external: true
+  #   name: iot-shared-net
+  web-backend-net:
+    driver: bridge

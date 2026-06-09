@@ -21,3 +21,15 @@ engine integrations.
 - `1883`: local plain MQTT for development only.
 - `8883`: MQTT over TLS/mTLS for devices.
 - `18083`: EMQX dashboard.
+
+## Run This Service
+
+Run MQTT only from this directory:
+
+```bash
+docker compose up -d
+docker compose logs -f mqtt
+```
+
+The root `docker/docker-compose.yml` can also orchestrate this service together
+with the web backend, PostgreSQL, and streaming service.

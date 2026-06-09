@@ -104,3 +104,6 @@ docker compose --env-file .env up -d --build
 ```bash
 docker compose logs -f web-backend
 ```
+
+也可以从 `docker/` 根编排文件统一启动多个服务；根编排只组织容器，镜像构建
+仍使用本目录的 `Dockerfile`。
