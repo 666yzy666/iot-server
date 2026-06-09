@@ -26,7 +26,7 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, provide, ref, onMounted, onUnmounted } from 'vue'
 import StatCard from '../components/StatCard.vue'
 import DeviceTable from '../components/DeviceTable.vue'
 import { useDevices } from '../composables/useDevices.js'
@@ -34,6 +34,8 @@ import { useServiceInvoke } from '../composables/useServiceInvoke.js'
 
 const { items, stats } = useDevices()
 const { invoke, getResult } = useServiceInvoke()
+provide("invokeService", invoke)
+provide("getServiceResult", getResult)
 
 const now = ref('')
 const connOffline = ref(false)
