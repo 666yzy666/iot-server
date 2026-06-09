@@ -27,12 +27,12 @@ class DeploymentContractTests(unittest.TestCase):
         self.assertIn("宝塔", text)
         self.assertIn("Docker", text)
         self.assertIn("bash deploy.sh", text)
-        self.assertIn("python -m app.init_db", text)
+        self.assertIn("python -m src.init_db", text)
         self.assertIn("api.hyrain.xyz", text)
         self.assertIn("https://api.hyrain.xyz/api/iot/emqx/property", text)
 
     def test_init_db_entrypoint_exists(self):
-        path = ROOT / "docker" / "web-backend" / "app" / "init_db.py"
+        path = ROOT / "docker" / "web-backend" / "backend" / "src" / "init_db.py"
         text = path.read_text(encoding="utf-8")
 
         self.assertIn("Base.metadata.create_all", text)
@@ -44,8 +44,8 @@ class DeploymentContractTests(unittest.TestCase):
         deploy = DEPLOY.read_text(encoding="utf-8")
 
         self.assertIn("FROM python:3.12-slim", dockerfile)
-        self.assertIn('CMD ["uvicorn", "app.main:app"', dockerfile)
+        self.assertIn('CMD ["uvicorn", "src.main:app"', dockerfile)
         self.assertIn("host.docker.internal:host-gateway", compose)
         self.assertIn('"127.0.0.1:${APP_PORT:-8000}:8000"', compose)
-        self.assertIn("python -m app.init_db", deploy)
+        self.assertIn("python -m src.init_db", deploy)
         self.assertIn("docker compose --env-file .env up -d --build", deploy)

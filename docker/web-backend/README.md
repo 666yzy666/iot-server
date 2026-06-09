@@ -13,7 +13,9 @@ MySQL, and serves the first device preview page.
 
 ## Runtime
 
-当前推荐运行方式是 Docker 直连模式。容器使用 `network_mode: host` 直接复用宿主机网络，通过 `127.0.0.1` 直连宝塔创建的 MySQL。
+当前推荐运行方式是 Docker bridge 模式。容器只把 Web 服务绑定到宿主机
+`127.0.0.1:${APP_PORT:-8000}`，由宝塔/Nginx 反向代理对外提供 HTTPS。
+容器通过 `host.docker.internal` 访问宝塔创建的 MySQL。
 
 MySQL 仍然使用宝塔面板创建和管理。
 
@@ -26,7 +28,7 @@ bash deploy.sh
 `.env` 中的 `DATABASE_URL` 示例:
 
 ```text
-DATABASE_URL=mysql+pymysql://iot_server:你的数据库密码@127.0.0.1:3306/iot_server
+DATABASE_URL=mysql+pymysql://iot_server:你的数据库密码@host.docker.internal:3306/iot_server
 ```
 
 ## EMQX Webhook 入库
@@ -75,7 +77,7 @@ bash deploy.sh
 
 ```bash
 docker compose --env-file .env build
-docker compose --env-file .env run --rm web-backend python -m app.init_db
+docker compose --env-file .env run --rm web-backend python -m src.init_db
 docker compose --env-file .env up -d --build
 ```
 
@@ -88,7 +90,7 @@ docker compose --env-file .env up -d --build
 初始化数据表:
 
 ```bash
-docker compose --env-file .env run --rm web-backend python -m app.init_db
+docker compose --env-file .env run --rm web-backend python -m src.init_db
 ```
 
 启动服务:
