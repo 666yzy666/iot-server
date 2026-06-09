@@ -50,7 +50,7 @@ onMounted(() => {
       ctx.moveTo(d.x + rad, d.y)
       ctx.arc(d.x, d.y, rad, 0, Math.PI * 2)
     }
-    ctx.fillStyle = 'rgba(168,85,247,0.2)'
+    ctx.fillStyle = 'rgba(139,92,246,0.12)'
     ctx.fill()
     anim = requestAnimationFrame(tick)
   }
