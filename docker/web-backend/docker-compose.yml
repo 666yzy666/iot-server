@@ -4,34 +4,20 @@ name: iot-web-backend
 
 services:
   web-backend:
-    # 固定镜像名，方便脚本稳定地重新构建和部署。
     image: iot-web-backend:latest
     build:
       context: .
       dockerfile: Dockerfile
     container_name: iot-web-backend
-    # 运行时密钥和环境差异放在 .env，不提交到 git。
     env_file:
       - .env
-    # 预留给可以提交到源码里的少量非敏感覆盖项；示例：
-    # environment:
-    #   APP_PORT: "8000"
-    #   LOG_LEVEL: "info"
     environment: {}
-    # 使用宿主机网络，容器内可直接通过 127.0.0.1 访问宝塔 MySQL。
-    # 注意：host 网络下 ports/networks 不生效，端口暴露由应用监听地址和服务器防火墙控制。
     network_mode: host
-    # 如需改回 bridge 网络，可参考：
-    # extra_hosts:
-    #   - "host.docker.internal:host-gateway"
-    # ports:
-    #   - "127.0.0.1:${APP_PORT:-8000}:8000"
-    # 正常部署不挂载目录；本地开发需要热更新时可参考：
-    # volumes:
-    #   - ./backend/src:/app/src:ro
-    #   - ./frontend/dist:/app/frontend/dist:ro
-    volumes: []
+    # 通过 volume 挂载前端产物和后端源码，git pull 后无需 --build。
+    # 前端构建通过 bash deploy.sh 或 docker run node ... npm run build 完成。
+    volumes:
+      - ./frontend/dist:/app/frontend/dist:ro
+      - ./backend/src:/app/src:ro
     restart: unless-stopped
 
-# Web 后台自身无状态，暂不需要命名卷。
 volumes: {}
