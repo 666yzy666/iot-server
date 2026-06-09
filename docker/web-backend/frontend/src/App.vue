@@ -6,10 +6,13 @@
 </template>
 
 <script setup>
-import { useLiquidEther } from './composables/useLiquidEther.js'
+import { useDotField } from './composables/useDotField.js'
 
-const etherRef = useLiquidEther({
-  colors: ['#5227FF', '#FF9FFC', '#B497CF']
+const etherRef = useDotField({
+  color: '168,85,247',   // primary purple
+  density: 1.2,
+  lineDistance: 150,
+  repelStrength: 10
 })
 </script>
 
