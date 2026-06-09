@@ -55,3 +55,20 @@ class DeviceRepository:
             }
             for row in rows
         ]
+
+    def list_property_history(self, device_id: str, limit: int = 20) -> list[dict]:
+        rows = self.session.execute(
+            select(DevicePropertyHistory)
+            .where(DevicePropertyHistory.device_id == device_id)
+            .order_by(DevicePropertyHistory.created_at.desc(), DevicePropertyHistory.id.desc())
+            .limit(limit)
+        ).scalars()
+        return [
+            {
+                "device_id": row.device_id,
+                "topic": row.topic,
+                "payload": row.payload,
+                "created_at": row.created_at.isoformat() if row.created_at else "",
+            }
+            for row in rows
+        ]

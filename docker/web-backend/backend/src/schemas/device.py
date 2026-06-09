@@ -14,3 +14,14 @@ class DeviceItem(BaseModel):
 
 class DeviceListResponse(BaseModel):
     items: list[DeviceItem]
+
+
+class HistoryItem(BaseModel):
+    device_id: str
+    topic: str
+    payload: dict[str, Any] = Field(default_factory=dict)
+    created_at: str = ""
+
+
+class HistoryListResponse(BaseModel):
+    items: list[HistoryItem]

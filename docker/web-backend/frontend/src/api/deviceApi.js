@@ -6,6 +6,12 @@ export async function fetchDevices() {
   return res.json();
 }
 
+export async function fetchDeviceHistory(deviceId) {
+  const res = await fetch(`${BASE}/${encodeURIComponent(deviceId)}/history`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`fetch history: ${res.status}`);
+  return res.json();
+}
+
 export async function invokeDeviceService(deviceId, serviceId) {
   const res = await fetch(`${BASE}/${encodeURIComponent(deviceId)}/services/${serviceId}/invoke`, {
     method: "POST",

@@ -91,6 +91,16 @@ class ApiRouteTests(unittest.TestCase):
         self.assertTrue(body["items"][0]["online"])
         self.assertEqual(body["items"][0]["version"], "0.1.4")
 
+        history = self.client.get("/api/devices/dev_001/history")
+        self.assertEqual(history.status_code, 200)
+        history_body = history.json()
+        self.assertEqual(len(history_body["items"]), 1)
+        self.assertEqual(history_body["items"][0]["device_id"], "dev_001")
+        self.assertEqual(
+            history_body["items"][0]["topic"],
+            "vitam/devices/dev_001/property/post",
+        )
+
     def test_ingest_emqx_default_webhook_payload_string(self):
         response = self.client.post(
             "/api/iot/emqx/property",
