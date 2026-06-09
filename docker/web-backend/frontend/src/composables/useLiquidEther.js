@@ -263,12 +263,13 @@ export function useLiquidEther(options = {}) {
   let common = null, mouse = null, output = null
 
   onMounted(() => {
+    try {
     const el = containerRef.value
-    if (!el) return
+    if (!el) { console.warn('[LiquidEther] no container element'); return }
     el.style.position = 'relative'; el.style.overflow = 'hidden'
 
     paletteTex = makePaletteTexture(colors)
-    bgVec4 = new THREE.Vector4(0, 0, 0, 0)
+    bgVec4 = new THREE.Vector4(0.06, 0.04, 0.08, 1.0)
 
     common = setupCommon()
     const canvas = common.init(el)
@@ -337,6 +338,7 @@ export function useLiquidEther(options = {}) {
       if (mouse) mouse.dispose()
       if (common.renderer) { const c = common.renderer.domElement; if (c && c.parentNode) c.parentNode.removeChild(c); common.renderer.dispose(); common.renderer.forceContextLoss() }
     })
+  } catch (e) { console.error('[LiquidEther] init error:', e) }
   })
 
   return containerRef
