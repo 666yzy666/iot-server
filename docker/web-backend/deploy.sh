@@ -21,6 +21,6 @@ docker compose build --pull
 
 # 3. 启动/重启容器
 echo ">>> Starting services..."
-docker compose --env-file .env up -d
+docker compose --env-file .env up -d --force-recreate
 
 echo ">>> Done."
