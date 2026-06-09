@@ -9,7 +9,7 @@
 import { useLiquidEther } from './composables/useLiquidEther.js'
 
 const etherRef = useLiquidEther({
-  colors: ['#2a1f3d', '#3d2a55', '#5a3f78']
+  colors: ['#5227FF', '#FF9FFC', '#B497CF']
 })
 </script>
 
