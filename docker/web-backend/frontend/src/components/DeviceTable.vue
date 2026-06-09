@@ -6,7 +6,7 @@
     </div>
     <div class="table-wrap">
       <table>
-        <thead>
+        <thead class="cursor-target">
           <tr>
             <th style="width: 32px"></th>
             <th>设备 ID</th>
@@ -49,7 +49,9 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useTargetCursor } from '../composables/useTargetCursor.js'
 import ServicePanel from './ServicePanel.vue'
+useTargetCursor({ targetSelector: ".cursor-target", spinDuration: 2 })
 
 defineProps({ items: { type: Array, default: () => [] } })
 const opened = ref('')
