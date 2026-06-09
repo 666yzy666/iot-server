@@ -6,7 +6,7 @@
 </template>
 
 <script setup>
-import { useLiquidEther } from '../composables/useLiquidEther.js'
+import { useLiquidEther } from './composables/useLiquidEther.js'
 
 const etherRef = useLiquidEther({
   colors: ['#5227FF', '#FF9FFC', '#B497CF']
