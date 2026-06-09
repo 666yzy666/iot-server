@@ -1,506 +1,467 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Vitam 设备监控</title>
-    <style>
-        /* Apple Design System Colors */
-        :root {
-            --primary: #0066cc;
-            --primary-focus: #0071e3;
-            --primary-on-dark: #2997ff;
-            --ink: #1d1d1f;
-            --body: #1d1d1f;
-            --body-on-dark: #ffffff;
-            --body-muted: #cccccc;
-            --ink-muted-80: #333333;
-            --ink-muted-48: #7a7a7a;
-            --divider-soft: #f0f0f0;
-            --hairline: #e0e0e0;
-            --canvas: #ffffff;
-            --canvas-parchment: #f5f5f7;
-            --surface-pearl: #fafafc;
-            --surface-tile-1: #272729;
-            --surface-tile-2: #2a2a2c;
-            --surface-black: #000000;
-            --surface-chip-translucent: #d2d2d7;
-            --on-primary: #ffffff;
-            --on-dark: #ffffff;
-
-            /* Spacing */
-            --spacing-xxs: 4px;
-            --spacing-xs: 8px;
-            --spacing-sm: 12px;
-            --spacing-md: 17px;
-            --spacing-lg: 24px;
-            --spacing-xl: 32px;
-            --spacing-xxl: 48px;
-            --spacing-section: 80px;
-
-            /* Border Radius */
-            --rounded-xs: 5px;
-            --rounded-sm: 8px;
-            --rounded-md: 11px;
-            --rounded-lg: 18px;
-            --rounded-pill: 9999px;
-
-            /* Semantic */
-            --semantic-success: #34c759;
-            --semantic-success-bg: #e8f5e9;
-            --semantic-warning: #ff9500;
-            --semantic-warning-bg: #fff3e0;
-            --semantic-error: #ff3b30;
-            --semantic-error-bg: #ffebee;
-            --semantic-offline: #8e8e93;
-            --semantic-offline-bg: #f2f2f7;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: var(--canvas-parchment);
-            color: var(--ink);
-            font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            font-size: 17px;
-            line-height: 1.47;
-            letter-spacing: -0.374px;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-
-        /* Global Nav - Apple style */
-        .global-nav {
-            background: var(--surface-black);
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .global-nav-content {
-            max-width: 980px;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 var(--spacing-lg);
-        }
-
-        .nav-logo {
-            color: var(--on-dark);
-            font-size: 12px;
-            font-weight: 400;
-            letter-spacing: -0.12px;
-            text-decoration: none;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: var(--spacing-lg);
-        }
-
-        .nav-link {
-            color: var(--body-muted);
-            font-size: 12px;
-            font-weight: 400;
-            letter-spacing: -0.12px;
-            text-decoration: none;
-            transition: color 0.15s ease;
-        }
-
-        .nav-link:hover {
-            color: var(--on-dark);
-        }
-
-        /* Product Tile - Hero Section */
-        .product-tile {
-            background: var(--canvas);
-            padding: var(--spacing-section) var(--spacing-lg);
-            text-align: center;
-        }
-
-        .hero-display {
-            font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
-            font-size: 56px;
-            font-weight: 600;
-            line-height: 1.07;
-            letter-spacing: -0.28px;
-            color: var(--ink);
-            margin-bottom: var(--spacing-sm);
-        }
-
-        .tagline {
-            font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
-            font-size: 21px;
-            font-weight: 600;
-            line-height: 1.19;
-            letter-spacing: 0.231px;
-            color: var(--ink-muted-48);
-            margin-bottom: var(--spacing-lg);
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: var(--spacing-md);
-            max-width: 980px;
-            margin: 0 auto;
-            padding: 0 var(--spacing-lg);
-        }
-
-        .stat-card {
-            background: var(--canvas);
-            border-radius: var(--rounded-lg);
-            padding: var(--spacing-lg);
-            text-align: center;
-            border: 1px solid var(--hairline);
-        }
-
-        .stat-value {
-            font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
-            font-size: 40px;
-            font-weight: 600;
-            line-height: 1.1;
-            letter-spacing: 0;
-            color: var(--primary);
-        }
-
-        .stat-label {
-            font-size: 14px;
-            font-weight: 400;
-            line-height: 1.43;
-            letter-spacing: -0.224px;
-            color: var(--ink-muted-48);
-            margin-top: var(--spacing-xs);
-        }
-
-        /* Content Section */
-        .content-section {
-            background: var(--canvas-parchment);
-            padding: var(--spacing-xl) var(--spacing-lg);
-        }
-
-        .section-header {
-            max-width: 980px;
-            margin: 0 auto var(--spacing-lg);
-        }
-
-        .section-title {
-            font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
-            font-size: 28px;
-            font-weight: 600;
-            line-height: 1.25;
-            letter-spacing: 0;
-            color: var(--ink);
-        }
-
-        /* Device Table - Apple Card Style */
-        .table-container {
-            max-width: 980px;
-            margin: 0 auto;
-            background: var(--canvas);
-            border-radius: var(--rounded-lg);
-            border: 1px solid var(--hairline);
-            overflow: hidden;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        thead {
-            background: var(--surface-pearl);
-            border-bottom: 1px solid var(--hairline);
-        }
-
-        th {
-            font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, sans-serif;
-            font-size: 14px;
-            font-weight: 600;
-            line-height: 1.29;
-            letter-spacing: -0.224px;
-            color: var(--ink-muted-48);
-            text-align: left;
-            padding: var(--spacing-sm) var(--spacing-md);
-            text-transform: none;
-        }
-
-        td {
-            font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, sans-serif;
-            font-size: 17px;
-            font-weight: 400;
-            line-height: 1.47;
-            letter-spacing: -0.374px;
-            color: var(--body);
-            padding: var(--spacing-md);
-            border-bottom: 1px solid var(--divider-soft);
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        tr:hover td {
-            background: var(--surface-pearl);
-        }
-
-        /* Status Badges - Apple Style */
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            font-size: 14px;
-            font-weight: 400;
-            line-height: 1.29;
-            letter-spacing: -0.224px;
-            padding: 4px 12px;
-            border-radius: var(--rounded-pill);
-        }
-
-        .status-online {
-            background: var(--semantic-success-bg);
-            color: var(--semantic-success);
-        }
-
-        .status-offline {
-            background: var(--semantic-offline-bg);
-            color: var(--semantic-offline);
-        }
-
-        .status-updating {
-            background: var(--semantic-warning-bg);
-            color: var(--semantic-warning);
-        }
-
-        .status-error {
-            background: var(--semantic-error-bg);
-            color: var(--semantic-error);
-        }
-
-        /* LED Status */
-        .led-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: var(--spacing-xs);
-        }
-
-        .led-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
-
-        .led-on .led-dot {
-            background: var(--semantic-success);
-            box-shadow: 0 0 8px var(--semantic-success);
-        }
-
-        .led-off .led-dot {
-            background: var(--semantic-offline);
-        }
-
-        /* Device ID - Monospace for tech feel */
-        .device-id {
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
-            font-size: 14px;
-            font-weight: 400;
-            color: var(--ink-muted-80);
-        }
-
-        /* Action Links - Apple Blue */
-        .action-link {
-            color: var(--primary);
-            font-size: 17px;
-            font-weight: 400;
-            text-decoration: none;
-            transition: color 0.15s ease;
-        }
-
-        .action-link:hover {
-            color: var(--primary-focus);
-        }
-
-        /* Footer */
-        .footer {
-            background: var(--canvas-parchment);
-            padding: var(--spacing-xxl) var(--spacing-lg);
-            text-align: center;
-        }
-
-        .footer-text {
-            font-size: 12px;
-            font-weight: 400;
-            line-height: 1.0;
-            letter-spacing: -0.12px;
-            color: var(--ink-muted-48);
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .hero-display {
-                font-size: 40px;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .nav-links {
-                display: none;
-            }
-
-            th, td {
-                padding: var(--spacing-sm);
-            }
-
-            .device-id {
-                font-size: 12px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .hero-display {
-                font-size: 34px;
-            }
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vitam IoT 设备管理</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --sidebar:#13131a;
+  --sidebar-hover:#1e1e2a;
+  --sidebar-active:#252535;
+  --sidebar-text:#6b6b80;
+  --sidebar-text-active:#e8e8f0;
+  --bg:#f0f1f4;
+  --card-bg:#fff;
+  --text:#1a1a2e;
+  --text-muted:#7a7a8e;
+  --border:#e5e6ea;
+  --primary:#4f6ef7;
+  --primary-hover:#3b5de7;
+  --green:#22c55e;
+  --green-bg:#e8faf0;
+  --orange:#f59e0b;
+  --orange-bg:#fef7e6;
+  --red:#ef4444;
+  --red-bg:#feeeee;
+  --gray:#9ca3af;
+  --gray-bg:#f3f4f6;
+  --radius:10px;
+  --radius-sm:6px;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-lg:0 4px 16px rgba(0,0,0,.08);
+  --transition:.15s ease
+}
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;
+  display:flex
+}
+/* ===== Sidebar ===== */
+.sidebar{
+  width:64px;background:var(--sidebar);
+  display:flex;flex-direction:column;align-items:center;
+  padding:16px 0;position:fixed;top:0;left:0;bottom:0;z-index:100;
+  transition:width .2s ease
+}
+.sidebar:hover{width:220px}
+.sidebar-logo{
+  width:36px;height:36px;border-radius:10px;
+  background:var(--primary);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:16px;margin-bottom:24px;
+  flex-shrink:0;text-decoration:none
+}
+.sidebar-nav{display:flex;flex-direction:column;gap:4px;width:100%;padding:0 10px;flex:1}
+.sidebar-item{
+  display:flex;align-items:center;gap:14px;
+  padding:10px 12px;border-radius:var(--radius-sm);
+  color:var(--sidebar-text);text-decoration:none;
+  cursor:pointer;transition:all var(--transition);
+  white-space:nowrap;overflow:hidden;position:relative
+}
+.sidebar-item:hover{background:var(--sidebar-hover);color:var(--sidebar-text-active)}
+.sidebar-item.active{background:var(--sidebar-active);color:var(--sidebar-text-active)}
+.sidebar-item .icon{width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.sidebar-item .icon svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sidebar-item .label{font-size:13px;font-weight:500;opacity:0;transition:opacity .15s ease .05s}
+.sidebar:hover .sidebar-item .label{opacity:1}
+.sidebar-bottom{margin-top:auto;padding:0 10px;width:100%}
+/* ===== Main ===== */
+.main{flex:1;margin-left:64px;min-height:100vh;display:flex;flex-direction:column}
+/* Header */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 28px;background:var(--bg);
+  border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50
+}
+.topbar-left h1{font-size:20px;font-weight:600;letter-spacing:-.3px}
+.topbar-left p{font-size:12px;color:var(--text-muted);margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.time-display{font-size:13px;color:var(--text-muted);font-variant-numeric:tabular-nums}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block}
+.status-dot.off{background:var(--gray)}
+/* Content */
+.content{padding:24px 28px;flex:1}
+/* Dashboard Grid */
+.dashboard-grid{display:none}
+.dashboard-grid.active{display:block}
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{
+  background:var(--card-bg);border-radius:var(--radius);
+  padding:20px;border:1px solid var(--border);box-shadow:var(--shadow)
+}
+.stat-card .stat-num{font-size:28px;font-weight:700;letter-spacing:-.5px;line-height:1.2}
+.stat-card .stat-num.blue{color:var(--primary)}
+.stat-card .stat-num.green{color:var(--green)}
+.stat-card .stat-num.gray{color:var(--gray)}
+.stat-card .stat-num.orange{color:var(--orange)}
+.stat-card .stat-label{font-size:13px;color:var(--text-muted);margin-top:4px}
+/* Device Cards */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.section-header h2{font-size:16px;font-weight:600}
+.section-header .refresh-btn{
+  background:var(--card-bg);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:6px 12px;
+  font-size:12px;color:var(--text-muted);cursor:pointer;
+  display:flex;align-items:center;gap:6px;transition:all var(--transition)
+}
+.section-header .refresh-btn:hover{background:var(--border);color:var(--text)}
+.device-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.device-card{
+  background:var(--card-bg);border-radius:var(--radius);
+  border:1px solid var(--border);box-shadow:var(--shadow);
+  padding:20px;cursor:pointer;transition:all var(--transition);
+  position:relative;overflow:hidden
+}
+.device-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-1px);border-color:var(--primary)}
+.device-card .card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.device-card .device-name{font-weight:600;font-size:15px}
+.device-card .device-id{font-size:11px;color:var(--text-muted);font-family:ui-monospace,monospace;margin-top:2px}
+.badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600
+}
+.badge.online{background:var(--green-bg);color:var(--green)}
+.badge.offline{background:var(--gray-bg);color:var(--gray)}
+.badge .dot{width:6px;height:6px;border-radius:50%}
+.badge.online .dot{background:var(--green)}
+.badge.offline .dot{background:var(--gray)}
+.device-card .card-body{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.device-card .card-field{}
+.device-card .card-field .field-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
+.device-card .card-field .field-value{font-size:13px;font-weight:500}
+.device-card .card-field .field-value.led-on{color:var(--green)}
+.device-card .card-field .field-value.led-off{color:var(--gray)}
+.card-time{font-size:11px;color:var(--text-muted);margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+/* Empty State */
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-muted)}
+.empty-state svg{width:48px;height:48px;stroke:var(--border);margin-bottom:12px}
+.empty-state p{font-size:14px}
+/* Detail Modal */
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);
+  z-index:200;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px)
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:var(--card-bg);border-radius:var(--radius);
+  width:90%;max-width:720px;max-height:85vh;overflow-y:auto;
+  box-shadow:var(--shadow-lg);padding:0
+}
+.modal-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 24px;border-bottom:1px solid var(--border);
+  position:sticky;top:0;background:var(--card-bg);z-index:1
+}
+.modal-header h2{font-size:18px;font-weight:600}
+.modal-close{
+  width:32px;height:32px;border:none;background:var(--gray-bg);
+  border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:18px;color:var(--text-muted);transition:all var(--transition)
+}
+.modal-close:hover{background:var(--border);color:var(--text)}
+.modal-body{padding:24px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.detail-item{}
+.detail-item .detail-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.detail-item .detail-value{font-size:15px;font-weight:500}
+.detail-item .detail-value.code{font-family:ui-monospace,monospace;font-size:13px;color:var(--text-muted)}
+/* History Table */
+.history-section h3{font-size:14px;font-weight:600;margin-bottom:12px}
+.history-table{
+  width:100%;border-collapse:collapse;
+  background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;
+  font-size:12px
+}
+.history-table th{
+  background:var(--gray-bg);padding:8px 12px;text-align:left;
+  font-weight:600;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px
+}
+.history-table td{padding:8px 12px;border-top:1px solid var(--border);color:var(--text)}
+.history-table tr:hover td{background:var(--gray-bg)}
+.history-table .payload-cell{font-family:ui-monospace,monospace;font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Settings page */
+.settings-page{padding:40px;text-align:center;color:var(--text-muted)}
+/* Loading */
+.loading{text-align:center;padding:40px;color:var(--text-muted)}
+.loading::after{content:"正在加载...";font-size:13px}
+/* Responsive */
+@media(max-width:768px){
+  .sidebar{width:56px}
+  .sidebar:hover{width:56px;pointer-events:none}
+  .sidebar-item .label{display:none}
+  .main{margin-left:56px}
+  .topbar{padding:12px 16px}
+  .topbar-left h1{font-size:16px}
+  .content{padding:16px}
+  .stats{grid-template-columns:repeat(2,1fr);gap:12px}
+  .device-grid{grid-template-columns:1fr}
+  .detail-grid{grid-template-columns:1fr}
+  .modal{width:95%}
+}
+@media(max-width:480px){
+  .stats{grid-template-columns:1fr}
+  .sidebar{width:48px}
+  .main{margin-left:48px}
+}
+</style>
 </head>
 <body>
-    <!-- Apple-style Global Nav -->
-    <nav class="global-nav">
-        <div class="global-nav-content">
-            <a href="/" class="nav-logo">Vitam</a>
-            <div class="nav-links">
-                <a href="#" class="nav-link">设备</a>
-                <a href="#" class="nav-link">监控</a>
-                <a href="#" class="nav-link">设置</a>
-            </div>
-        </div>
-    </nav>
 
-    <!-- Product Tile - Hero -->
-    <section class="product-tile">
-        <h1 class="hero-display">Vitam 设备监控</h1>
-        <p class="tagline">实时查看所有设备状态</p>
-    </section>
+<!-- Sidebar -->
+<aside class="sidebar">
+  <a href="/" class="sidebar-logo">V</a>
+  <nav class="sidebar-nav">
+    <a class="sidebar-item active" data-page="dashboard" onclick="switchPage('dashboard')">
+      <span class="icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span>
+      <span class="label">设备总览</span>
+    </a>
+    <a class="sidebar-item" data-page="list" onclick="switchPage('list')">
+      <span class="icon"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span>
+      <span class="label">设备列表</span>
+    </a>
+    <a class="sidebar-item" data-page="logs" onclick="switchPage('logs')">
+      <span class="icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
+      <span class="label">数据日志</span>
+    </a>
+  </nav>
+  <div class="sidebar-bottom">
+    <a class="sidebar-item" data-page="settings" onclick="switchPage('settings')">
+      <span class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+      <span class="label">设置</span>
+    </a>
+  </div>
+</aside>
 
-    <!-- Stats Grid -->
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-value" id="stat-total">—</div>
-            <div class="stat-label">设备总数</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value" id="stat-online">—</div>
-            <div class="stat-label">在线设备</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value" id="stat-offline">—</div>
-            <div class="stat-label">离线设备</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value" id="stat-led">—</div>
-            <div class="stat-label">LED 开启</div>
-        </div>
+<!-- Main -->
+<div class="main">
+
+<!-- Top Bar -->
+<header class="topbar">
+  <div class="topbar-left">
+    <h1 id="page-title">设备总览</h1>
+    <p id="page-subtitle">实时设备状态监控面板</p>
+  </div>
+  <div class="topbar-right">
+    <span class="time-display" id="timeDisplay">--:--:--</span>
+    <span class="status-dot" id="statusDot"></span>
+  </div>
+</header>
+
+<!-- Content -->
+<div class="content">
+
+  <!-- Dashboard Page -->
+  <div class="dashboard-grid active" id="page-dashboard">
+    <div class="stats">
+      <div class="stat-card"><div class="stat-num blue" id="stat-total">—</div><div class="stat-label">设备总数</div></div>
+      <div class="stat-card"><div class="stat-num green" id="stat-online">—</div><div class="stat-label">在线</div></div>
+      <div class="stat-card"><div class="stat-num gray" id="stat-offline">—</div><div class="stat-label">离线</div></div>
+      <div class="stat-card"><div class="stat-num orange" id="stat-led">—</div><div class="stat-label">LED 开启</div></div>
     </div>
+    <div class="section-header">
+      <h2>设备状态</h2>
+      <button class="refresh-btn" onclick="loadDevices()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        刷新
+      </button>
+    </div>
+    <div class="device-grid" id="deviceGrid"></div>
+  </div>
 
-    <!-- Content Section -->
-    <section class="content-section">
-        <div class="section-header">
-            <h2 class="section-title">设备列表</h2>
+  <!-- List Page -->
+  <div class="dashboard-grid" id="page-list">
+    <div class="section-header"><h2>所有设备</h2><button class="refresh-btn" onclick="loadDevices()">刷新</button></div>
+    <div class="device-grid" id="listGrid"></div>
+  </div>
+
+  <!-- Logs Page -->
+  <div class="dashboard-grid" id="page-logs">
+    <div class="section-header"><h2>数据日志</h2></div>
+    <div id="logsContent"><div class="empty-state"><p>查看具体设备后在此显示数据日志</p></div></div>
+  </div>
+
+  <!-- Settings Page -->
+  <div class="dashboard-grid" id="page-settings">
+    <div class="section-header"><h2>设置</h2></div>
+    <div class="settings-page"><p>Vitam IoT Backend · v1.0</p></div>
+  </div>
+
+</div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detailModal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">设备详情</h2>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ===== State =====
+let devices = [];
+let refreshTimer = null;
+
+// ===== Navigation =====
+function switchPage(page) {
+  document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+  document.querySelector(`.sidebar-item[data-page="${page}"]`).classList.add('active');
+  document.querySelectorAll('.dashboard-grid').forEach(el => el.classList.remove('active'));
+  document.getElementById(`page-${page}`).classList.add('active');
+  const titles = {dashboard:['设备总览','实时设备状态监控面板'],list:['设备列表','查看所有注册设备'],logs:['数据日志','设备属性上报历史'],settings:['设置','系统信息']};
+  document.getElementById('page-title').textContent = titles[page][0];
+  document.getElementById('page-subtitle').textContent = titles[page][1];
+}
+
+// ===== Time =====
+function updateTime() {
+  const now = new Date();
+  document.getElementById('timeDisplay').textContent =
+    now.toLocaleTimeString('zh-CN', {hour12:false});
+}
+setInterval(updateTime, 1000);
+updateTime();
+
+// ===== Fetch Devices =====
+async function loadDevices() {
+  const dot = document.getElementById('statusDot');
+  dot.className = 'status-dot off';
+  try {
+    const r = await fetch('/api/devices');
+    const data = await r.json();
+    devices = data.items || [];
+    dot.className = 'status-dot';
+    render();
+  } catch(e) {
+    dot.className = 'status-dot off';
+    console.error('load failed', e);
+  }
+}
+
+// ===== Render =====
+function render() {
+  const total = devices.length;
+  const online = devices.filter(d => d.online).length;
+  const offline = total - online;
+  const ledOn = devices.filter(d => d.led_on === true).length;
+
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-online').textContent = online;
+  document.getElementById('stat-offline').textContent = offline;
+  document.getElementById('stat-led').textContent = ledOn;
+
+  const cardHtml = (item) => {
+    const onlineClass = item.online ? 'online' : 'offline';
+    const onlineText = item.online ? '在线' : '离线';
+    const ledClass = item.led_on ? 'led-on' : 'led-off';
+    const ledText = item.led_on === null ? '—' : (item.led_on ? '开' : '关');
+    const lastSeen = item.last_seen ? new Date(item.last_seen).toLocaleString('zh-CN') : '—';
+    const deviceId = item.device_id || '';
+    const version = item.version || '—';
+    const ota = item.ota_state || '—';
+
+    return `
+      <div class="device-card" onclick="showDetail('${deviceId}')">
+        <div class="card-top">
+          <div>
+            <div class="device-name">${deviceId}</div>
+            <div class="device-id">${deviceId}</div>
+          </div>
+          <span class="badge ${onlineClass}"><span class="dot"></span>${onlineText}</span>
         </div>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>设备 ID</th>
-                        <th>状态</th>
-                        <th>版本</th>
-                        <th>OTA 状态</th>
-                        <th>LED</th>
-                        <th>最后上报</th>
-                    </tr>
-                </thead>
-                <tbody id="devices"></tbody>
-            </table>
+        <div class="card-body">
+          <div class="card-field"><div class="field-label">版本</div><div class="field-value">${version}</div></div>
+          <div class="card-field"><div class="field-label">OTA</div><div class="field-value">${ota}</div></div>
+          <div class="card-field"><div class="field-label">LED</div><div class="field-value ${ledClass}">${ledText}</div></div>
+          <div class="card-field"><div class="field-label">状态</div><div class="field-value" style="color:${item.online ? 'var(--green)' : 'var(--gray)'}">${onlineText}</div></div>
         </div>
-    </section>
+        <div class="card-time">最后上报: ${lastSeen}</div>
+      </div>
+    `;
+  };
 
-    <!-- Footer -->
-    <footer class="footer">
-        <p class="footer-text">Vitam Device Monitor · 每 5 秒自动刷新</p>
-    </footer>
+  const emptyHtml = `
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      <p>暂无设备数据</p>
+    </div>
+  `;
 
-    <script>
-        async function loadDevices() {
-            try {
-                const response = await fetch('/api/devices');
-                const data = await response.json();
+  document.getElementById('deviceGrid').innerHTML = devices.length ? devices.map(cardHtml).join('') : emptyHtml;
+  document.getElementById('listGrid').innerHTML = devices.length ? devices.map(cardHtml).join('') : emptyHtml;
+}
 
-                // Update stats
-                const total = data.items.length;
-                const online = data.items.filter(item => item.online).length;
-                const offline = total - online;
-                const ledOn = data.items.filter(item => item.led_on === true).length;
+// ===== Detail Modal =====
+async function showDetail(deviceId) {
+  document.getElementById('detailModal').classList.add('open');
+  document.getElementById('modalTitle').textContent = deviceId;
+  document.getElementById('modalBody').innerHTML = '<div class="loading"></div>';
 
-                document.getElementById('stat-total').textContent = total;
-                document.getElementById('stat-online').textContent = online;
-                document.getElementById('stat-offline').textContent = offline;
-                document.getElementById('stat-led').textContent = ledOn;
+  const device = devices.find(d => d.device_id === deviceId);
+  if (!device) { document.getElementById('modalBody').innerHTML = '<p style="padding:20px">设备未找到</p>'; return; }
 
-                // Render table rows
-                const rows = data.items.map((item) => {
-                    // Determine status badge
-                    let statusBadge = '';
-                    if (item.online) {
-                        statusBadge = '<span class="status-badge status-online">在线</span>';
-                    } else {
-                        statusBadge = '<span class="status-badge status-offline">离线</span>';
-                    }
+  // Fetch history
+  let history = [];
+  try {
+    const r = await fetch(`/api/devices/${deviceId}/history`);
+    if (r.ok) { const d = await r.json(); history = d.items || []; }
+  } catch(e) {}
 
-                    // LED indicator
-                    const ledClass = item.led_on ? 'led-on' : 'led-off';
-                    const ledText = item.led_on === null ? '—' : (item.led_on ? '开' : '关');
+  const onlineClass = device.online ? 'online' : 'offline';
+  const onlineText = device.online ? '在线' : '离线';
+  const ledText = device.led_on === null ? '—' : (device.led_on ? '开' : '关');
+  const lastSeen = device.last_seen ? new Date(device.last_seen).toLocaleString('zh-CN') : '—';
 
-                    return `
-                        <tr>
-                            <td><span class="device-id">${item.device_id}</span></td>
-                            <td>${statusBadge}</td>
-                            <td>${item.version || '—'}</td>
-                            <td>${item.ota_state || '—'}</td>
-                            <td>
-                                <span class="led-indicator ${ledClass}">
-                                    <span class="led-dot"></span>
-                                    <span>${ledText}</span>
-                                </span>
-                            </td>
-                            <td>${item.last_seen || '—'}</td>
-                        </tr>
-                    `;
-                }).join('');
+  const historyRows = history.length
+    ? history.map(h => `
+      <tr>
+        <td>${h.created_at ? new Date(h.created_at).toLocaleString('zh-CN') : '—'}</td>
+        <td class="payload-cell">${h.topic || '—'}</td>
+        <td class="payload-cell">${JSON.stringify(h.payload || {})}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">暂无历史数据</td></tr>';
 
-                document.getElementById('devices').innerHTML = rows || '<tr><td colspan="6" style="text-align:center;color:var(--ink-muted-48);">暂无设备</td></tr>';
-            } catch (error) {
-                console.error('Failed to load devices:', error);
-                document.getElementById('devices').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--semantic-error);">加载失败</td></tr>';
-            }
-        }
+  document.getElementById('modalBody').innerHTML = `
+    <div class="detail-grid">
+      <div class="detail-item"><div class="detail-label">设备 ID</div><div class="detail-value code">${deviceId}</div></div>
+      <div class="detail-item"><div class="detail-label">在线状态</div><div class="detail-value" style="color:${device.online ? 'var(--green)' : 'var(--gray)'}">
+        <span class="badge ${onlineClass}"><span class="dot"></span>${onlineText}</span>
+      </div></div>
+      <div class="detail-item"><div class="detail-label">固件版本</div><div class="detail-value">${device.version || '—'}</div></div>
+      <div class="detail-item"><div class="detail-label">OTA 状态</div><div class="detail-value">${device.ota_state || '—'}</div></div>
+      <div class="detail-item"><div class="detail-label">LED</div><div class="detail-value" style="color:${device.led_on ? 'var(--green)' : 'var(--gray)'}">${ledText}</div></div>
+      <div class="detail-item"><div class="detail-label">最后上报</div><div class="detail-value">${lastSeen}</div></div>
+    </div>
+    <div class="history-section">
+      <h3>属性上报历史</h3>
+      <table class="history-table">
+        <thead><tr><th>时间</th><th>主题</th><th>数据</th></tr></thead>
+        <tbody>${historyRows}</tbody>
+      </table>
+    </div>
+  `;
+}
 
-        loadDevices();
-        setInterval(loadDevices, 5000);
-    </script>
+function closeModal() {
+  document.getElementById('detailModal').classList.remove('open');
+}
+
+// ===== Init =====
+loadDevices();
+setInterval(loadDevices, 5000);
+
+// Close modal on Escape
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
+</script>
 </body>
 </html>

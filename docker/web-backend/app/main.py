@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.database import get_session
 from app.emqx import parse_property_report
 from app.repository import DeviceRepository
-from app.schemas import DeviceListResponse, EmqxWebhookRequest, IngestResponse
+from app.schemas import DeviceListResponse, EmqxWebhookRequest, HistoryListResponse, IngestResponse
 
 
 app = FastAPI(title="Vitam IoT Backend")
@@ -61,3 +61,12 @@ def ingest_property(
 def list_devices(session: Session = Depends(get_session)) -> DeviceListResponse:
     repo = DeviceRepository(session)
     return DeviceListResponse(items=repo.list_devices())
+
+
+@app.get("/api/devices/{device_id}/history", response_model=HistoryListResponse)
+def device_history(
+    device_id: str,
+    session: Session = Depends(get_session),
+) -> HistoryListResponse:
+    repo = DeviceRepository(session)
+    return HistoryListResponse(items=repo.list_property_history(device_id))
