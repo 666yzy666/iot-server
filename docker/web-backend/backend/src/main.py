@@ -2,10 +2,11 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from api import devices_router, health_router, webhook_router
+from api import auth_router, devices_router, health_router, webhook_router
 
 app = FastAPI(title="Vitam IoT Backend")
 
+app.include_router(auth_router)
 app.include_router(health_router)
 app.include_router(webhook_router)
 app.include_router(devices_router)

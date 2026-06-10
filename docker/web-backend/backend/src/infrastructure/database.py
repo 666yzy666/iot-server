@@ -23,7 +23,7 @@ def _get_session_local(settings: Settings | None = None):
     return _SessionLocal
 
 
-def get_session(settings: Settings | None = None):
-    local = _get_session_local(settings)
+def get_session():
+    local = _get_session_local()
     with local() as session:
         yield session

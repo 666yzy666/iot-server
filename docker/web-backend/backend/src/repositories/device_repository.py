@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from infrastructure.emqx import EmqxPropertyReport
 from models.device import Device, DeviceLatestStatus, DevicePropertyHistory, utc_now
+from models.user import UserDeviceBinding
 
 
 class DeviceRepository:
@@ -39,9 +40,19 @@ class DeviceRepository:
             )
         )
 
-    def list_devices(self) -> list[dict]:
+    def list_devices(self, user_id: int | None = None) -> list[dict]:
+        stmt = select(DeviceLatestStatus).order_by(DeviceLatestStatus.device_id)
+        if user_id is not None:
+            stmt = (
+                stmt.join(
+                    UserDeviceBinding,
+                    UserDeviceBinding.device_id == DeviceLatestStatus.device_id,
+                )
+                .where(UserDeviceBinding.user_id == user_id)
+                .order_by(DeviceLatestStatus.device_id)
+            )
         rows = self.session.execute(
-            select(DeviceLatestStatus).order_by(DeviceLatestStatus.device_id)
+            stmt
         ).scalars()
         return [
             {
@@ -56,12 +67,31 @@ class DeviceRepository:
             for row in rows
         ]
 
-    def list_property_history(self, device_id: str, limit: int = 20) -> list[dict]:
+    def user_owns_device(self, user_id: int, device_id: str) -> bool:
+        return (
+            self.session.execute(
+                select(UserDeviceBinding.id).where(
+                    UserDeviceBinding.user_id == user_id,
+                    UserDeviceBinding.device_id == device_id,
+                )
+            ).first()
+            is not None
+        )
+
+    def list_property_history(
+        self,
+        device_id: str,
+        limit: int = 20,
+        user_id: int | None = None,
+    ) -> list[dict]:
+        stmt = select(DevicePropertyHistory).where(DevicePropertyHistory.device_id == device_id)
+        if user_id is not None:
+            stmt = stmt.join(
+                UserDeviceBinding,
+                UserDeviceBinding.device_id == DevicePropertyHistory.device_id,
+            ).where(UserDeviceBinding.user_id == user_id)
         rows = self.session.execute(
-            select(DevicePropertyHistory)
-            .where(DevicePropertyHistory.device_id == device_id)
-            .order_by(DevicePropertyHistory.created_at.desc(), DevicePropertyHistory.id.desc())
-            .limit(limit)
+            stmt.order_by(DevicePropertyHistory.created_at.desc(), DevicePropertyHistory.id.desc()).limit(limit)
         ).scalars()
         return [
             {

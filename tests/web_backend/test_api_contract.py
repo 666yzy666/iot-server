@@ -25,6 +25,7 @@ class ApiContractTests(unittest.TestCase):
         self.assertEqual(settings.webhook_secret, "")
         self.assertEqual(settings.app_host, "127.0.0.1")
         self.assertEqual(settings.app_port, 8000)
+        self.assertEqual(settings.auth_token_ttl_days, 7)
 
 
 class ApiRouteTests(unittest.TestCase):
@@ -55,6 +56,22 @@ class ApiRouteTests(unittest.TestCase):
     def tearDown(self):
         self.app.dependency_overrides.clear()
 
+    def _auth_header(self):
+        response = self.client.post(
+            "/api/auth/register",
+            json={"username": "alice", "password": "q958849334", "display_name": "Alice"},
+        )
+        token = response.json()["access_token"]
+        return {"Authorization": f"Bearer {token}"}
+
+    def _bind_device_to_user(self, device_id: str, user_id: int = 1):
+        from infrastructure.database import get_session
+        from models.user import UserDeviceBinding
+
+        with next(self.app.dependency_overrides[get_session]()) as session:
+            session.add(UserDeviceBinding(user_id=user_id, device_id=device_id))
+            session.commit()
+
     def test_health(self):
         response = self.client.get("/health")
 
@@ -83,7 +100,10 @@ class ApiRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"ok": True, "device_id": "dev_001"})
 
-        devices = self.client.get("/api/devices")
+        headers = self._auth_header()
+        self._bind_device_to_user("dev_001")
+
+        devices = self.client.get("/api/devices", headers=headers)
         self.assertEqual(devices.status_code, 200)
         body = devices.json()
         self.assertEqual(len(body["items"]), 1)
@@ -91,7 +111,7 @@ class ApiRouteTests(unittest.TestCase):
         self.assertTrue(body["items"][0]["online"])
         self.assertEqual(body["items"][0]["version"], "0.1.4")
 
-        history = self.client.get("/api/devices/dev_001/history")
+        history = self.client.get("/api/devices/dev_001/history", headers=headers)
         self.assertEqual(history.status_code, 200)
         history_body = history.json()
         self.assertEqual(len(history_body["items"]), 1)
@@ -171,9 +191,20 @@ class ApiRouteTests(unittest.TestCase):
         api_mod.get_client = fake_get_client
         app.dependency_overlays_cleared = True
         try:
+            headers = self._auth_header()
+            response = self.client.post(
+                "/api/iot/emqx/property",
+                json={
+                    "topic": "vitam/devices/dev_001/property/post",
+                    "payload": {"params": {"device_id": "dev_001"}},
+                },
+            )
+            self.assertEqual(response.status_code, 200)
+            self._bind_device_to_user("dev_001")
             response = self.client.post(
                 "/api/devices/dev_001/services/get_status/invoke",
                 json={"cmd_id": "cmd-test-001"},
+                headers=headers,
             )
         finally:
             api_mod.get_client = original
@@ -186,10 +217,33 @@ class ApiRouteTests(unittest.TestCase):
         self.assertEqual(body["cmd_id"], "cmd-test-001")
         self.assertEqual(body["topic"], "vitam/devices/dev_001/service/get_status/invoke")
 
-    def test_invoke_device_service_rejects_unknown_service(self):
+    def test_invoke_device_service_rejects_unowned_device(self):
+        headers = self._auth_header()
         response = self.client.post(
             "/api/devices/dev_001/services/set_led/invoke",
             json={},
+            headers=headers,
+        )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertIn("device not found", response.json()["detail"])
+
+    def test_invoke_device_service_rejects_unknown_service(self):
+        headers = self._auth_header()
+        response = self.client.post(
+            "/api/iot/emqx/property",
+            json={
+                "topic": "vitam/devices/dev_001/property/post",
+                "payload": {"params": {"device_id": "dev_001"}},
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self._bind_device_to_user("dev_001")
+
+        response = self.client.post(
+            "/api/devices/dev_001/services/set_led/invoke",
+            json={},
+            headers=headers,
         )
 
         self.assertEqual(response.status_code, 400)

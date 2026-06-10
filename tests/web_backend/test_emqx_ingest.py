@@ -4,26 +4,26 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[2]
-BACKEND = ROOT / "docker" / "web-backend"
-sys.path.insert(0, str(BACKEND))
+BACKEND_SRC = ROOT / "docker" / "web-backend" / "backend" / "src"
+sys.path.insert(0, str(BACKEND_SRC))
 
 
 class EmqxIngestTests(unittest.TestCase):
     def test_parse_property_topic_extracts_device_id(self):
-        from app.emqx import parse_property_topic
+        from infrastructure.emqx import parse_property_topic
 
         device_id = parse_property_topic("vitam/devices/dev_001/property/post")
 
         self.assertEqual(device_id, "dev_001")
 
     def test_parse_property_topic_rejects_wrong_shape(self):
-        from app.emqx import parse_property_topic
+        from infrastructure.emqx import parse_property_topic
 
         with self.assertRaises(ValueError):
             parse_property_topic("vitam/devices/dev_001/service/get_status/invoke")
 
     def test_parse_property_report_normalizes_params(self):
-        from app.emqx import EmqxPropertyReport, parse_property_report
+        from infrastructure.emqx import EmqxPropertyReport, parse_property_report
 
         report = parse_property_report(
             "vitam/devices/dev_001/property/post",
@@ -48,7 +48,7 @@ class EmqxIngestTests(unittest.TestCase):
         self.assertFalse(report.led_on)
 
     def test_parse_property_report_rejects_device_mismatch(self):
-        from app.emqx import parse_property_report
+        from infrastructure.emqx import parse_property_report
 
         with self.assertRaises(ValueError):
             parse_property_report(
@@ -62,9 +62,9 @@ class DeviceRepositoryTests(unittest.TestCase):
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
 
-        from app.emqx import parse_property_report
-        from app.models import Base
-        from app.repository import DeviceRepository
+        from infrastructure.emqx import parse_property_report
+        from models.base import Base
+        from repositories.device_repository import DeviceRepository
 
         engine = create_engine("sqlite+pysqlite:///:memory:", future=True)
         Base.metadata.create_all(engine)

@@ -40,10 +40,6 @@ body{
 }
 #app{min-height:100vh;position:relative;z-index:1}
 
-/* ===== Particle Canvas ===== */
-/* ===== Glow Cursor ===== */
-}
-
 /* ===== Scrollbar ===== */
 ::-webkit-scrollbar{width:6px}
 ::-webkit-scrollbar-track{background:transparent}

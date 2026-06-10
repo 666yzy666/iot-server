@@ -6,11 +6,13 @@
         <p class="subtitle">实时监控 · IoT 设备管理面板</p>
       </div>
       <div class="topbar-right">
+        <span class="user-chip">{{ auth.user.value?.display_name || auth.user.value?.username }}</span>
         <span class="conn-status">
           <span class="status-dot" :class="{ off: connOffline }"></span>
           <span class="conn-label">{{ connOffline ? '离线' : '在线' }}</span>
         </span>
         <span class="time-display">{{ now }}</span>
+        <button class="logout-btn" @click="logout">退出</button>
       </div>
     </header>
 
@@ -31,9 +33,13 @@ import StatCard from '../components/StatCard.vue'
 import DeviceTable from '../components/DeviceTable.vue'
 import { useDevices } from '../composables/useDevices.js'
 import { useServiceInvoke } from '../composables/useServiceInvoke.js'
+import { useAuth } from '../composables/useAuth.js'
+import { useRouter } from 'vue-router'
 
 const { items, stats } = useDevices()
 const { invoke, getResult } = useServiceInvoke()
+const auth = useAuth()
+const router = useRouter()
 provide("invokeService", invoke)
 provide("getServiceResult", getResult)
 
@@ -44,6 +50,10 @@ let timeTimer
 function updTime() {
   now.value = new Date().toLocaleTimeString('zh-CN', { hour12: false })
   connOffline.value = stats.value.total > 0 && stats.value.online === 0
+}
+function logout() {
+  auth.logout()
+  router.replace('/login')
 }
 onMounted(() => { updTime(); timeTimer = setInterval(updTime, 1000) })
 onUnmounted(() => { clearInterval(timeTimer) })
@@ -118,6 +128,30 @@ onUnmounted(() => { clearInterval(timeTimer) })
   font-size: 13px;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
+}
+.user-chip {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 9px;
+  font-size: 12px;
+}
+.logout-btn {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.logout-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--primary);
 }
 .stats {
   display: grid;

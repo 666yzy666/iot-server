@@ -61,6 +61,21 @@ The backend writes:
 - `device_latest_status`: latest state used by the preview page.
 - `device_property_history`: raw property report history.
 
+## 账号与设备归属
+
+容器启动时会自动创建以下安全相关数据表:
+
+- `users`: 保存账号、显示名称、密码盐值和 PBKDF2 密码哈希，不保存明文密码。
+- `user_sessions`: 只保存 Bearer Token 的 SHA-256 哈希和过期时间，不保存明文 Token。
+- `user_device_bindings`: 保存 `user_id` 与 `device_id` 的绑定关系。
+
+登录流程:
+
+1. 前端通过 `/api/auth/login` 登录，或通过 `/api/auth/register` 创建账号。
+2. 后端校验密码哈希后返回 Bearer Token。
+3. 前端访问设备列表、历史、服务发布接口时携带 `Authorization: Bearer <token>`。
+4. 后端根据当前 `user_id` 过滤设备，只展示并控制该用户绑定的设备。
+
 ## 宝塔部署
 
 1. 宝塔软件商店安装 MySQL，创建数据库 `iot_server` 和用户 `iot_server`。

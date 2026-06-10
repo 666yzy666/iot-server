@@ -17,8 +17,11 @@ class DeviceService:
         self.session.commit()
         return IngestResponse(ok=True, device_id=report.device_id)
 
-    def list_devices(self) -> DeviceListResponse:
-        return DeviceListResponse(items=self.repo.list_devices())
+    def list_devices(self, user_id: int | None = None) -> DeviceListResponse:
+        return DeviceListResponse(items=self.repo.list_devices(user_id=user_id))
 
-    def list_property_history(self, device_id: str) -> HistoryListResponse:
-        return HistoryListResponse(items=self.repo.list_property_history(device_id))
+    def list_property_history(self, device_id: str, user_id: int | None = None) -> HistoryListResponse:
+        return HistoryListResponse(items=self.repo.list_property_history(device_id, user_id=user_id))
+
+    def user_owns_device(self, user_id: int, device_id: str) -> bool:
+        return self.repo.user_owns_device(user_id, device_id)

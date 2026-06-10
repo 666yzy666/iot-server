@@ -12,6 +12,7 @@ class Settings:
     emqx_api_key: str
     emqx_api_secret: str
     mqtt_topic_base: str
+    auth_token_ttl_days: int
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -27,4 +28,5 @@ class Settings:
             emqx_api_key=os.getenv("EMQX_API_KEY", ""),
             emqx_api_secret=os.getenv("EMQX_API_SECRET", ""),
             mqtt_topic_base=os.getenv("MQTT_TOPIC_BASE", "vitam/devices"),
+            auth_token_ttl_days=int(os.getenv("AUTH_TOKEN_TTL_DAYS", "7")),
         )

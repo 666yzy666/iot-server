@@ -47,14 +47,15 @@ class DeploymentContractTests(unittest.TestCase):
 
         self.assertIn("FROM python:3.12-slim", dockerfile)
         self.assertIn("ENV PYTHONPATH=/app/src", dockerfile)
-        self.assertIn("COPY entrypoint.sh ./entrypoint.sh", dockerfile)
+        self.assertIn("COPY entrypoint.sh", dockerfile)
         self.assertIn('ENTRYPOINT ["/app/entrypoint.sh"]', dockerfile)
         self.assertIn('CMD ["uvicorn", "src.main:app"', dockerfile)
         self.assertIn("network_mode: host", compose)
         self.assertNotIn("\n    extra_hosts:", compose)
         self.assertNotIn("\n    ports:", compose)
         self.assertNotIn("run --rm web-backend python -m src.init_db", deploy)
-        self.assertIn("docker compose --env-file .env up -d --build", deploy)
+        self.assertIn("docker compose build --pull", deploy)
+        self.assertIn("docker compose --env-file .env up -d --force-recreate", deploy)
 
     def test_container_import_path_is_documented(self):
         backend_dockerfile = (ROOT / "docker" / "web-backend" / "backend" / "Dockerfile").read_text(
