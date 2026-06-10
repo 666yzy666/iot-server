@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from config.settings import Settings
@@ -61,6 +61,10 @@ class AuthService:
         if expires_at <= now:
             return None
         return self.session.get(User, row.user_id)
+
+    def revoke_token(self, token: str) -> None:
+        self.session.execute(delete(UserSession).where(UserSession.token_hash == hash_token(token)))
+        self.session.commit()
 
     def _get_user(self, username: str) -> User | None:
         return self.session.execute(select(User).where(User.username == username)).scalar_one_or_none()

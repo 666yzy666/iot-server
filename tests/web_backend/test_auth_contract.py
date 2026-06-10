@@ -35,7 +35,7 @@ class AuthContractTests(unittest.TestCase):
 
         app.dependency_overrides[get_session] = override_session
         self.app = app
-        self.client = TestClient(app)
+        self.client = TestClient(app, base_url="https://testserver")
 
     def tearDown(self):
         self.app.dependency_overrides.clear()
@@ -53,6 +53,9 @@ class AuthContractTests(unittest.TestCase):
         response = self._register()
 
         self.assertEqual(response.status_code, 200)
+        self.assertIn("vitam_session=", response.headers["set-cookie"])
+        self.assertIn("HttpOnly", response.headers["set-cookie"])
+        self.assertIn("SameSite=lax", response.headers["set-cookie"])
         body = response.json()
         self.assertEqual(body["user"]["username"], "alice")
         self.assertNotIn("password", body["user"])
@@ -69,8 +72,32 @@ class AuthContractTests(unittest.TestCase):
         )
 
         self.assertEqual(login.status_code, 200)
+        self.assertIn("vitam_session=", login.headers["set-cookie"])
+        self.assertIn("HttpOnly", login.headers["set-cookie"])
         self.assertEqual(login.json()["user"]["username"], "alice")
         self.assertTrue(login.json()["access_token"])
+
+    def test_cookie_session_can_access_devices_without_bearer_token(self):
+        from infrastructure.database import get_session
+        from models.device import Device, DeviceLatestStatus
+        from models.user import UserDeviceBinding
+
+        register = self._register("alice")
+        with next(self.app.dependency_overrides[get_session]()) as session:
+            session.add_all(
+                [
+                    Device(device_id="dev_cookie"),
+                    DeviceLatestStatus(device_id="dev_cookie", online=True),
+                    UserDeviceBinding(user_id=1, device_id="dev_cookie"),
+                ]
+            )
+            session.commit()
+
+        self.client.cookies.update(register.cookies)
+        response = self.client.get("/api/devices")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([i["device_id"] for i in response.json()["items"]], ["dev_cookie"])
 
     def test_login_rejects_wrong_password(self):
         self._register()

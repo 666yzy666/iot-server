@@ -3,7 +3,11 @@ import { authHeaders } from "../composables/useAuth.js";
 const BASE = "/api/devices";
 
 export async function fetchDevices() {
-  const res = await fetch(BASE, { cache: "no-store", headers: authHeaders() });
+  const res = await fetch(BASE, {
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: authHeaders(),
+  });
   if (!res.ok) throw new Error(`fetch devices: ${res.status}`);
   return res.json();
 }
@@ -11,6 +15,7 @@ export async function fetchDevices() {
 export async function fetchDeviceHistory(deviceId) {
   const res = await fetch(`${BASE}/${encodeURIComponent(deviceId)}/history`, {
     cache: "no-store",
+    credentials: "same-origin",
     headers: authHeaders(),
   });
   if (!res.ok) throw new Error(`fetch history: ${res.status}`);
@@ -20,6 +25,7 @@ export async function fetchDeviceHistory(deviceId) {
 export async function bindDevice(deviceId) {
   const res = await fetch(`${BASE}/bind`, {
     method: "POST",
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify({ device_id: deviceId }),
   });
@@ -33,6 +39,7 @@ export async function bindDevice(deviceId) {
 export async function invokeDeviceService(deviceId, serviceId) {
   const res = await fetch(`${BASE}/${encodeURIComponent(deviceId)}/services/${serviceId}/invoke`, {
     method: "POST",
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify({}),
   });

@@ -67,8 +67,7 @@ function updTime() {
   connOffline.value = stats.value.total > 0 && stats.value.online === 0
 }
 function logout() {
-  auth.logout()
-  router.replace('/login')
+  auth.logout().finally(() => router.replace('/login'))
 }
 async function submitBind() {
   bindMessage.value = ''

@@ -16,8 +16,15 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   const auth = useAuth();
+  if (!auth.isAuthenticated.value) {
+    try {
+      await auth.refreshMe();
+    } catch {
+      // Stay unauthenticated when the secure session cookie is absent or expired.
+    }
+  }
   if (to.name !== "login" && !auth.isAuthenticated.value) {
     return { name: "login" };
   }

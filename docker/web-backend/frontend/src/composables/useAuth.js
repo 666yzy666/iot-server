@@ -1,8 +1,7 @@
 import { computed, ref } from "vue";
-import { login as loginApi, register as registerApi } from "../api/authApi.js";
+import { fetchMe, login as loginApi, logout as logoutApi, register as registerApi } from "../api/authApi.js";
 
 const STORAGE_KEY = "vitam_auth";
-const token = ref("");
 const user = ref(null);
 
 function loadAuth() {
@@ -10,7 +9,6 @@ function loadAuth() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return;
     const saved = JSON.parse(raw);
-    token.value = saved.access_token || "";
     user.value = saved.user || null;
   } catch {
     localStorage.removeItem(STORAGE_KEY);
@@ -18,9 +16,8 @@ function loadAuth() {
 }
 
 function saveAuth(data) {
-  token.value = data.access_token;
   user.value = data.user;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ user: data.user }));
 }
 
 loadAuth();
@@ -38,22 +35,29 @@ export function useAuth() {
     return data;
   }
 
-  function logout() {
-    token.value = "";
+  async function refreshMe() {
+    const profile = await fetchMe();
+    user.value = profile;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ user: profile }));
+    return profile;
+  }
+
+  async function logout() {
+    await logoutApi();
     user.value = null;
     localStorage.removeItem(STORAGE_KEY);
   }
 
   return {
-    token,
     user,
-    isAuthenticated: computed(() => Boolean(token.value)),
+    isAuthenticated: computed(() => Boolean(user.value)),
     login,
     register,
+    refreshMe,
     logout,
   };
 }
 
 export function authHeaders() {
-  return token.value ? { Authorization: `Bearer ${token.value}` } : {};
+  return {};
 }
