@@ -16,6 +16,15 @@ class DeviceListResponse(BaseModel):
     items: list[DeviceItem]
 
 
+class DeviceBindRequest(BaseModel):
+    device_id: str = Field(min_length=1, max_length=64)
+
+
+class DeviceBindResponse(BaseModel):
+    ok: bool
+    device_id: str
+
+
 class HistoryItem(BaseModel):
     device_id: str
     topic: str

@@ -122,6 +122,67 @@ class AuthContractTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 401)
 
+    def test_user_can_bind_existing_device_by_device_id(self):
+        from infrastructure.database import get_session
+        from models.device import Device, DeviceLatestStatus
+
+        token = self._register("alice").json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        with next(self.app.dependency_overrides[get_session]()) as session:
+            session.add_all(
+                [
+                    Device(device_id="dev_001"),
+                    DeviceLatestStatus(device_id="dev_001", online=True, version="0.1.4"),
+                ]
+            )
+            session.commit()
+
+        bind = self.client.post(
+            "/api/devices/bind",
+            json={"device_id": "dev_001"},
+            headers=headers,
+        )
+
+        self.assertEqual(bind.status_code, 200)
+        self.assertEqual(bind.json(), {"ok": True, "device_id": "dev_001"})
+
+        devices = self.client.get("/api/devices", headers=headers)
+        self.assertEqual([i["device_id"] for i in devices.json()["items"]], ["dev_001"])
+
+    def test_bind_device_is_idempotent_for_same_user(self):
+        from infrastructure.database import get_session
+        from models.device import Device, DeviceLatestStatus
+        from models.user import UserDeviceBinding
+
+        token = self._register("alice").json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        with next(self.app.dependency_overrides[get_session]()) as session:
+            session.add_all([Device(device_id="dev_001"), DeviceLatestStatus(device_id="dev_001")])
+            session.commit()
+
+        first = self.client.post("/api/devices/bind", json={"device_id": "dev_001"}, headers=headers)
+        second = self.client.post("/api/devices/bind", json={"device_id": "dev_001"}, headers=headers)
+
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(second.status_code, 200)
+        with next(self.app.dependency_overrides[get_session]()) as session:
+            rows = session.query(UserDeviceBinding).filter_by(user_id=1, device_id="dev_001").all()
+            self.assertEqual(len(rows), 1)
+
+    def test_bind_rejects_unknown_device(self):
+        token = self._register("alice").json()["access_token"]
+
+        response = self.client.post(
+            "/api/devices/bind",
+            json={"device_id": "missing_device"},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertIn("device not found", response.json()["detail"])
+
 
 if __name__ == "__main__":
     unittest.main()

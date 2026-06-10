@@ -78,6 +78,14 @@ class DeviceRepository:
             is not None
         )
 
+    def device_exists(self, device_id: str) -> bool:
+        return self.session.get(Device, device_id) is not None
+
+    def bind_device_to_user(self, user_id: int, device_id: str) -> None:
+        if self.user_owns_device(user_id, device_id):
+            return
+        self.session.add(UserDeviceBinding(user_id=user_id, device_id=device_id))
+
     def list_property_history(
         self,
         device_id: str,

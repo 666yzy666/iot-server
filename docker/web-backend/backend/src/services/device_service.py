@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 
 from infrastructure.emqx import parse_property_report
 from repositories.device_repository import DeviceRepository
-from schemas.device import DeviceListResponse, HistoryListResponse
+from schemas.device import DeviceBindResponse, DeviceListResponse, HistoryListResponse
 from schemas.ingest import IngestResponse
 
 
@@ -25,3 +25,11 @@ class DeviceService:
 
     def user_owns_device(self, user_id: int, device_id: str) -> bool:
         return self.repo.user_owns_device(user_id, device_id)
+
+    def bind_device(self, user_id: int, device_id: str) -> DeviceBindResponse:
+        device_id = device_id.strip()
+        if not self.repo.device_exists(device_id):
+            raise LookupError("device not found")
+        self.repo.bind_device_to_user(user_id, device_id)
+        self.session.commit()
+        return DeviceBindResponse(ok=True, device_id=device_id)

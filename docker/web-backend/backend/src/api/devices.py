@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from api.auth import current_user
 from infrastructure.database import get_session
 from models.user import User
-from schemas.device import DeviceListResponse, HistoryListResponse
+from schemas.device import DeviceBindRequest, DeviceBindResponse, DeviceListResponse, HistoryListResponse
 from schemas.service import ServiceInvokeRequest, ServiceInvokeResponse
 from services.device_service import DeviceService
 from services.mqtt_service import MqttService
@@ -18,6 +18,18 @@ def list_devices(
     user: User = Depends(current_user),
 ) -> DeviceListResponse:
     return DeviceService(session).list_devices(user_id=user.id)
+
+
+@router.post("/bind", response_model=DeviceBindResponse)
+def bind_device(
+    body: DeviceBindRequest = Body(...),
+    session: Session = Depends(get_session),
+    user: User = Depends(current_user),
+) -> DeviceBindResponse:
+    try:
+        return DeviceService(session).bind_device(user.id, body.device_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @router.get("/{device_id}/history", response_model=HistoryListResponse)

@@ -17,6 +17,19 @@ export async function fetchDeviceHistory(deviceId) {
   return res.json();
 }
 
+export async function bindDevice(deviceId) {
+  const res = await fetch(`${BASE}/bind`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ device_id: deviceId }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.ok) {
+    throw new Error(data.detail || "bind device failed");
+  }
+  return data;
+}
+
 export async function invokeDeviceService(deviceId, serviceId) {
   const res = await fetch(`${BASE}/${encodeURIComponent(deviceId)}/services/${serviceId}/invoke`, {
     method: "POST",

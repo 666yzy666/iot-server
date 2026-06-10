@@ -23,6 +23,16 @@
       <StatCard :value="stats.ledOn" label="LED 开启" color="warning" />
     </section>
 
+    <form class="bind-bar" @submit.prevent="submitBind">
+      <div class="bind-copy">
+        <strong>绑定设备</strong>
+        <span>输入已上报入库的设备 ID</span>
+      </div>
+      <input v-model.trim="bindDeviceId" placeholder="例如 dev_001" />
+      <button :disabled="bindLoading">{{ bindLoading ? '绑定中' : '绑定' }}</button>
+      <span v-if="bindMessage" class="bind-message" :class="{ error: bindError }">{{ bindMessage }}</span>
+    </form>
+
     <DeviceTable :items="items" />
   </div>
 </template>
@@ -34,9 +44,10 @@ import DeviceTable from '../components/DeviceTable.vue'
 import { useDevices } from '../composables/useDevices.js'
 import { useServiceInvoke } from '../composables/useServiceInvoke.js'
 import { useAuth } from '../composables/useAuth.js'
+import { bindDevice } from '../api/deviceApi.js'
 import { useRouter } from 'vue-router'
 
-const { items, stats } = useDevices()
+const { items, stats, reload } = useDevices()
 const { invoke, getResult } = useServiceInvoke()
 const auth = useAuth()
 const router = useRouter()
@@ -45,6 +56,10 @@ provide("getServiceResult", getResult)
 
 const now = ref('')
 const connOffline = ref(false)
+const bindDeviceId = ref('')
+const bindLoading = ref(false)
+const bindMessage = ref('')
+const bindError = ref(false)
 let timeTimer
 
 function updTime() {
@@ -54,6 +69,27 @@ function updTime() {
 function logout() {
   auth.logout()
   router.replace('/login')
+}
+async function submitBind() {
+  bindMessage.value = ''
+  bindError.value = false
+  if (!bindDeviceId.value) {
+    bindMessage.value = '请输入设备 ID'
+    bindError.value = true
+    return
+  }
+  bindLoading.value = true
+  try {
+    await bindDevice(bindDeviceId.value)
+    bindMessage.value = '绑定成功'
+    bindDeviceId.value = ''
+    await reload()
+  } catch (err) {
+    bindMessage.value = err.message || '绑定失败'
+    bindError.value = true
+  } finally {
+    bindLoading.value = false
+  }
 }
 onMounted(() => { updTime(); timeTimer = setInterval(updTime, 1000) })
 onUnmounted(() => { clearInterval(timeTimer) })
@@ -159,10 +195,63 @@ onUnmounted(() => { clearInterval(timeTimer) })
   gap: 14px;
   margin-bottom: 24px;
 }
+.bind-bar {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(180px, 260px) auto minmax(90px, auto);
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.bind-copy {
+  display: grid;
+  gap: 2px;
+}
+.bind-copy strong {
+  font-size: 14px;
+}
+.bind-copy span,
+.bind-message {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.bind-bar input {
+  min-width: 0;
+  border: 1px solid var(--border);
+  background: var(--bg-body);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  padding: 9px 10px;
+  outline: none;
+}
+.bind-bar input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+.bind-bar button {
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: white;
+  border-radius: var(--radius-sm);
+  padding: 9px 14px;
+  cursor: pointer;
+  font-weight: 700;
+}
+.bind-bar button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+.bind-message.error {
+  color: var(--danger);
+}
 @media (max-width: 760px) {
   .layout { padding: 20px 14px 32px; }
   .gradient-text { font-size: 22px; }
   .stats { grid-template-columns: repeat(2, 1fr); }
   .topbar { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .bind-bar { grid-template-columns: 1fr; }
 }
 </style>
