@@ -1,5 +1,5 @@
 from infrastructure import emqx_api
-from schemas.service import ServiceInvokeResponse
+from schemas.service import PropertySetResponse, ServiceInvokeResponse
 
 _cmd_id_counter: int = 0
 
@@ -16,6 +16,26 @@ class MqttService:
             service_id=service_id,
             topic=result["topic"],
             cmd_id=result["cmd_id"],
+            emqx_code=result.get("emqx_code"),
+            emqx_message=result.get("emqx_message", ""),
+        )
+
+    def set_device_properties(
+        self,
+        device_id: str,
+        params: dict,
+        cmd_id: str | None = None,
+    ) -> PropertySetResponse:
+        if not params:
+            raise ValueError("params is required")
+        generated_cmd_id = cmd_id or self._next_cmd_id()
+        result = emqx_api.get_client().set_properties(device_id, params, generated_cmd_id)
+        return PropertySetResponse(
+            ok=result["ok"],
+            device_id=device_id,
+            topic=result["topic"],
+            cmd_id=result["cmd_id"],
+            params=result.get("params", {}),
             emqx_code=result.get("emqx_code"),
             emqx_message=result.get("emqx_message", ""),
         )

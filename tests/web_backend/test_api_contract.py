@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 import sys
 import unittest
 
@@ -140,6 +141,57 @@ class ApiRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"ok": True, "device_id": "dev_001"})
 
+    def test_ingest_unified_webhook_accepts_event_and_service_reply(self):
+        event_response = self.client.post(
+            "/api/webhook/emqx",
+            json={
+                "event": "message.publish",
+                "clientid": "dev_001",
+                "topic": "vitam/devices/dev_001/event/button_pressed/post",
+                "payload": {"id": "evt-1", "params": {"button": "BOOT"}},
+                "timestamp": 1710000000001,
+            },
+        )
+        reply_response = self.client.post(
+            "/api/webhook/emqx",
+            json={
+                "event": "message.publish",
+                "clientid": "dev_001",
+                "topic": "vitam/devices/dev_001/service/reboot/reply",
+                "payload": {"id": "cmd-1", "code": 200, "message": "success"},
+                "timestamp": 1710000000002,
+            },
+        )
+
+        self.assertEqual(event_response.status_code, 200)
+        self.assertEqual(event_response.json(), {"ok": True, "device_id": "dev_001"})
+        self.assertEqual(reply_response.status_code, 200)
+        self.assertEqual(reply_response.json(), {"ok": True, "device_id": "dev_001"})
+
+    def test_unified_webhook_requires_secret_when_configured(self):
+        os.environ["EMQX_WEBHOOK_SECRET"] = "test-secret"
+        try:
+            denied = self.client.post(
+                "/api/webhook/emqx",
+                json={
+                    "topic": "vitam/devices/dev_001/event/button_pressed/post",
+                    "payload": {"id": "evt-1", "params": {}},
+                },
+            )
+            accepted = self.client.post(
+                "/api/webhook/emqx",
+                headers={"x-emqx-webhook-secret": "test-secret"},
+                json={
+                    "topic": "vitam/devices/dev_001/event/button_pressed/post",
+                    "payload": {"id": "evt-1", "params": {}},
+                },
+            )
+        finally:
+            os.environ.pop("EMQX_WEBHOOK_SECRET", None)
+
+        self.assertEqual(denied.status_code, 401)
+        self.assertEqual(accepted.status_code, 200)
+
     def test_ingest_rejects_missing_topic_with_readable_error(self):
         response = self.client.post(
             "/api/iot/emqx/property",
@@ -216,6 +268,55 @@ class ApiRouteTests(unittest.TestCase):
         self.assertEqual(body["service_id"], "get_status")
         self.assertEqual(body["cmd_id"], "cmd-test-001")
         self.assertEqual(body["topic"], "vitam/devices/dev_001/service/get_status/invoke")
+
+    def test_set_device_property_publishes_property_set_topic(self):
+        from main import app
+
+        class FakeEmqxClient:
+            def set_properties(self, device_id, params, cmd_id):
+                return {
+                    "ok": True,
+                    "topic": f"vitam/devices/{device_id}/property/set",
+                    "cmd_id": cmd_id,
+                    "params": params,
+                    "emqx_code": 0,
+                    "emqx_message": "",
+                }
+
+        import infrastructure.emqx_api as api_mod
+        original = api_mod.get_client
+
+        def fake_get_client(settings=None):
+            return FakeEmqxClient()
+
+        try:
+            headers = self._auth_header()
+            response = self.client.post(
+                "/api/iot/emqx/property",
+                json={
+                    "topic": "vitam/devices/dev_001/property/post",
+                    "payload": {"params": {"device_id": "dev_001"}},
+                },
+            )
+            self.assertEqual(response.status_code, 200)
+            self._bind_device_to_user("dev_001")
+            api_mod.get_client = fake_get_client
+
+            response = self.client.post(
+                "/api/devices/dev_001/properties",
+                json={"cmd_id": "cmd-led-001", "params": {"led_on": True}},
+                headers=headers,
+            )
+        finally:
+            api_mod.get_client = original
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertTrue(body["ok"])
+        self.assertEqual(body["device_id"], "dev_001")
+        self.assertEqual(body["topic"], "vitam/devices/dev_001/property/set")
+        self.assertEqual(body["cmd_id"], "cmd-led-001")
+        self.assertEqual(body["params"], {"led_on": True})
 
     def test_invoke_device_service_rejects_unowned_device(self):
         headers = self._auth_header()

@@ -36,6 +36,20 @@ export async function bindDevice(deviceId) {
   return data;
 }
 
+export async function setDeviceProperties(deviceId, params) {
+  const res = await fetch(`${BASE}/${encodeURIComponent(deviceId)}/properties`, {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ params }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.ok) {
+    throw new Error(data.detail || data.emqx_message || "property set failed");
+  }
+  return data;
+}
+
 export async function invokeDeviceService(deviceId, serviceId) {
   const res = await fetch(`${BASE}/${encodeURIComponent(deviceId)}/services/${serviceId}/invoke`, {
     method: "POST",

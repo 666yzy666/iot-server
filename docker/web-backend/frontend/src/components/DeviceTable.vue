@@ -34,7 +34,7 @@
             </tr>
             <tr v-if="opened === item.device_id" class="expand-row">
               <td colspan="7">
-                <ServicePanel :device-id="item.device_id" />
+                <ServicePanel :device-id="item.device_id" :device="item" />
               </td>
             </tr>
           </template>

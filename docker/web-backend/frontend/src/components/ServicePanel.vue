@@ -2,6 +2,16 @@
   <div class="svc-panel">
     <!-- Service Cards -->
     <div class="svc-grid">
+      <div class="svc-card led-card">
+        <div class="svc-info">
+          <div class="svc-name">LED 开关</div>
+          <div class="svc-desc">通过 property/set 设置设备 LED 状态</div>
+          <div class="svc-mono">property = led_on · 当前 {{ device?.led_on ? '开' : '关' }}</div>
+        </div>
+        <button class="invoke-btn" @click.stop="setLed(!device?.led_on)" :disabled="sending === 'led_on'">
+          {{ sending === 'led_on' ? '发送中…' : device?.led_on ? '关闭' : '开启' }}
+        </button>
+      </div>
       <div class="svc-card" v-for="svc in serviceList" :key="svc.id">
         <div class="svc-info">
           <div class="svc-name">{{ svc.name }}</div>
@@ -50,10 +60,11 @@
 
 <script setup>
 import { computed, inject, onMounted, ref, watch } from 'vue'
-import { fetchDeviceHistory } from '../api/deviceApi.js'
+import { fetchDeviceHistory, setDeviceProperties } from '../api/deviceApi.js'
 
 const props = defineProps({
   deviceId: { type: String, required: true },
+  device: { type: Object, default: null },
   services: { type: Array, default: () => [] },
 })
 const serviceList = computed(() =>
@@ -89,6 +100,21 @@ async function doInvoke(svcId, btn) {
   } catch (e) {
     requestLog.value[0].status = 'err'
     requestLog.value[0].message = e.message || '请求失败'
+  }
+  sending.value = ''
+}
+
+async function setLed(on) {
+  sending.value = 'led_on'
+  const time = nowStr()
+  requestLog.value.unshift({ time, serviceId: 'property:led_on', status: 'sending', message: '正在发送...' })
+  try {
+    const result = await setDeviceProperties(props.deviceId, { led_on: on })
+    requestLog.value[0].status = result.ok ? 'ok' : 'err'
+    requestLog.value[0].message = result.ok ? '已下发 LED 设置' : result.emqx_message || '设置失败'
+  } catch (e) {
+    requestLog.value[0].status = 'err'
+    requestLog.value[0].message = e.message || '设置失败'
   }
   sending.value = ''
 }

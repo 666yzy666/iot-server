@@ -1,8 +1,8 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from infrastructure.emqx import EmqxPropertyReport
-from models.device import Device, DeviceLatestStatus, DevicePropertyHistory, utc_now
+from infrastructure.emqx import EmqxEventReport, EmqxPropertyReport, EmqxReplyReport
+from models.device import Device, DeviceLatestStatus, DeviceMessageHistory, DevicePropertyHistory, utc_now
 from models.user import UserDeviceBinding
 
 
@@ -13,10 +13,7 @@ class DeviceRepository:
     def store_property_report(self, topic: str, report: EmqxPropertyReport) -> None:
         now = utc_now()
 
-        device = self.session.get(Device, report.device_id)
-        if device is None:
-            device = Device(device_id=report.device_id, created_at=now)
-            self.session.add(device)
+        device = self._ensure_device(report.device_id, now)
         device.updated_at = now
 
         status = self.session.get(DeviceLatestStatus, report.device_id)
@@ -34,6 +31,45 @@ class DeviceRepository:
         self.session.add(
             DevicePropertyHistory(
                 device_id=report.device_id,
+                topic=topic,
+                payload=report.raw_payload,
+                created_at=now,
+            )
+        )
+
+    def _ensure_device(self, device_id: str, now) -> Device:
+        device = self.session.get(Device, device_id)
+        if device is None:
+            device = Device(device_id=device_id, created_at=now)
+            self.session.add(device)
+        return device
+
+    def store_event_report(self, topic: str, report: EmqxEventReport) -> None:
+        now = utc_now()
+        device = self._ensure_device(report.device_id, now)
+        device.updated_at = now
+
+        self.session.add(
+            DeviceMessageHistory(
+                device_id=report.device_id,
+                message_type="event",
+                action_id=report.event_id,
+                topic=topic,
+                payload=report.raw_payload,
+                created_at=now,
+            )
+        )
+
+    def store_reply_report(self, topic: str, report: EmqxReplyReport) -> None:
+        now = utc_now()
+        device = self._ensure_device(report.device_id, now)
+        device.updated_at = now
+
+        self.session.add(
+            DeviceMessageHistory(
+                device_id=report.device_id,
+                message_type=report.message_type,
+                action_id=report.action_id,
                 topic=topic,
                 payload=report.raw_payload,
                 created_at=now,
@@ -104,6 +140,25 @@ class DeviceRepository:
         return [
             {
                 "device_id": row.device_id,
+                "topic": row.topic,
+                "payload": row.payload,
+                "created_at": row.created_at.isoformat() if row.created_at else "",
+            }
+            for row in rows
+        ]
+
+    def list_device_messages(self, device_id: str, limit: int = 20) -> list[dict]:
+        rows = self.session.execute(
+            select(DeviceMessageHistory)
+            .where(DeviceMessageHistory.device_id == device_id)
+            .order_by(DeviceMessageHistory.created_at.desc(), DeviceMessageHistory.id.desc())
+            .limit(limit)
+        ).scalars()
+        return [
+            {
+                "device_id": row.device_id,
+                "message_type": row.message_type,
+                "action_id": row.action_id,
                 "topic": row.topic,
                 "payload": row.payload,
                 "created_at": row.created_at.isoformat() if row.created_at else "",

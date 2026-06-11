@@ -30,6 +30,9 @@ class EmqxApiClient:
     def service_invoke_topic(self, device_id: str, service_id: str) -> str:
         return f"{self._topic_base}/{device_id}/service/{service_id}/invoke"
 
+    def property_set_topic(self, device_id: str) -> str:
+        return f"{self._topic_base}/{device_id}/property/set"
+
     def invoke_service(self, device_id: str, service_id: str, cmd_id: str) -> dict[str, Any]:
         topic = self.service_invoke_topic(device_id, service_id)
         payload = json.dumps({"id": cmd_id, "params": {}}, ensure_ascii=False)
@@ -49,6 +52,32 @@ class EmqxApiClient:
             "topic": topic,
             "cmd_id": cmd_id,
             "service_id": service_id,
+            "emqx_code": body.get("code"),
+            "emqx_message": body.get("message", ""),
+        }
+
+    def set_properties(self, device_id: str, params: dict[str, Any], cmd_id: str) -> dict[str, Any]:
+        topic = self.property_set_topic(device_id)
+        payload = json.dumps(
+            {"id": cmd_id, "version": "1.0", "params": params},
+            ensure_ascii=False,
+        )
+        resp = self._http.post(
+            f"{self._url}/publish",
+            headers={
+                "Authorization": self._auth_header,
+                "Content-Type": "application/json",
+            },
+            json={"topic": topic, "payload": payload, "qos": 1, "retain": False},
+        )
+        resp.raise_for_status()
+        body = resp.json()
+        logger.info("EMQX property set: topic=%s id=%s code=%s", topic, cmd_id, body.get("code"))
+        return {
+            "ok": body.get("code", 0) == 0,
+            "topic": topic,
+            "cmd_id": cmd_id,
+            "params": params,
             "emqx_code": body.get("code"),
             "emqx_message": body.get("message", ""),
         }

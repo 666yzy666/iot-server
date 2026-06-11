@@ -5,7 +5,7 @@ from api.auth import current_user
 from infrastructure.database import get_session
 from models.user import User
 from schemas.device import DeviceBindRequest, DeviceBindResponse, DeviceListResponse, HistoryListResponse
-from schemas.service import ServiceInvokeRequest, ServiceInvokeResponse
+from schemas.service import PropertySetRequest, PropertySetResponse, ServiceInvokeRequest, ServiceInvokeResponse
 from services.device_service import DeviceService
 from services.mqtt_service import MqttService
 
@@ -39,6 +39,25 @@ def device_history(
     user: User = Depends(current_user),
 ) -> HistoryListResponse:
     return DeviceService(session).list_property_history(device_id, user_id=user.id)
+
+
+@router.post("/{device_id}/properties", response_model=PropertySetResponse)
+def set_device_properties(
+    device_id: str,
+    body: PropertySetRequest = Body(default=PropertySetRequest()),
+    session: Session = Depends(get_session),
+    user: User = Depends(current_user),
+) -> PropertySetResponse:
+    try:
+        if not DeviceService(session).user_owns_device(user.id, device_id):
+            raise HTTPException(status_code=404, detail="device not found")
+        return MqttService().set_device_properties(device_id, body.params, body.cmd_id)
+    except HTTPException:
+        raise
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
 @router.post("/{device_id}/services/{service_id}/invoke", response_model=ServiceInvokeResponse)
